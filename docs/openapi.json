@@ -1,0 +1,4622 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "ObraFlow / Dokimos API",
+    "version": "0.1.0",
+    "description": "Contrato inicial planejado; não representa endpoints implementados. Ler contrato-api.md para regras transacionais, sessão, normalização, exemplos e catálogo de erros. Roles exclusivas admin e operator; responsabilidades por obra e etapas atribuídas a operadores. Sessão PostgreSQL, validade absoluta de 8h, cookie HttpOnly e token CSRF. Valores e identificadores dos exemplos são fictícios."
+  },
+  "servers": [
+    {
+      "url": "/api/v1",
+      "description": "Mesma origem da aplicação; endereço local definido na execução."
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "Users"
+    },
+    {
+      "name": "Projects"
+    },
+    {
+      "name": "Suppliers"
+    },
+    {
+      "name": "Responsibilities"
+    },
+    {
+      "name": "Rules"
+    },
+    {
+      "name": "Orders"
+    }
+  ],
+  "security": [
+    {
+      "sessionCookie": []
+    }
+  ],
+  "paths": {
+    "/auth/csrf": {
+      "get": {
+        "operationId": "getCsrf",
+        "summary": "Obter token CSRF",
+        "description": "Bootstrap técnico público. Sem sessão autenticada, cria sessão anônima de 15 minutos no PostgreSQL. Com sessão autenticada, retorna token e expiração existentes, sem renovar o prazo. Acesso somente pela origem configurada; não é uma operação de negócio.",
+        "tags": [
+          "Auth"
+        ],
+        "security": [],
+        "x-roles": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Obter token CSRF",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Csrf"
+                },
+                "example": {
+                  "csrfToken": "CSRF_EXAMPLE_NOT_VALID",
+                  "authenticated": false,
+                  "expiresAt": "2026-10-24T13:15:00Z"
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "description": "Identificador opaco de sessão. HttpOnly; SameSite=Lax; Path=/; sem Domain. Secure em HTTPS. Valor de exemplo não utilizável.",
+                "schema": {
+                  "type": "string"
+                },
+                "example": "obraflow.sid=ANONYMOUS_SESSION_EXAMPLE_NOT_VALID; HttpOnly; SameSite=Lax; Path=/; Max-Age=900"
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "login",
+        "summary": "Entrar com conta local",
+        "description": "Requer cookie anônimo e X-CSRF-Token obtidos em GET /auth/csrf. Credenciais incorretas retornam 401 INVALID_CREDENTIALS sem distinguir conta inexistente. Sucesso regenera o identificador e o token CSRF, salva a sessão no PostgreSQL e inicia prazo absoluto de 8h. Já autenticado: 409 SESSION_ALREADY_AUTHENTICATED. Máximo de 10 tentativas por IP em 15 minutos.",
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrfToken": []
+          }
+        ],
+        "x-roles": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Entrar com conta local",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                },
+                "example": {
+                  "user": {
+                    "id": "00000000-0000-4000-8000-000000000002",
+                    "name": "Amanda",
+                    "email": "amanda@example.test",
+                    "role": "operator"
+                  },
+                  "expiresAt": "2026-10-24T21:00:00Z",
+                  "csrfToken": "ROTATED_CSRF_EXAMPLE_NOT_VALID"
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "description": "Identificador opaco de sessão. HttpOnly; SameSite=Lax; Path=/; sem Domain. Secure em HTTPS. Valor de exemplo não utilizável.",
+                "schema": {
+                  "type": "string"
+                },
+                "example": "obraflow.sid=SESSION_EXAMPLE_NOT_VALID; HttpOnly; SameSite=Lax; Path=/; Max-Age=28800"
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "description": "Credenciais inválidas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "INVALID_CREDENTIALS",
+                    "message": "E-mail ou senha inválidos.",
+                    "fields": [],
+                    "details": {},
+                    "requestId": "00000000-0000-4000-8000-000000000900"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "description": "Saia da sessão atual antes de entrar com outra conta.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "SESSION_ALREADY_AUTHENTICATED",
+                    "message": "Saia da sessão atual antes de entrar com outra conta.",
+                    "fields": [],
+                    "details": {},
+                    "requestId": "00000000-0000-4000-8000-000000000900"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
+          },
+          "429": {
+            "description": "Limite de tentativas atingido. Aguarde antes de tentar novamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "LOGIN_RATE_LIMITED",
+                    "message": "Limite de tentativas atingido. Aguarde antes de tentar novamente.",
+                    "fields": [],
+                    "details": {},
+                    "requestId": "00000000-0000-4000-8000-000000000900"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "description": "Segundos até nova tentativa."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "x-authentication": "Sessão anônima aceita somente para validar CSRF do login.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginInput"
+              },
+              "example": {
+                "email": "amanda@example.test",
+                "password": "SenhaFicticiaExemplo2026!"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "summary": "Encerrar sessão",
+        "description": "Exige sessão autenticada e CSRF. Invalida a sessão persistida antes de confirmar sucesso e remove cookie com os mesmos atributos de Path/Domain. Segunda chamada sem sessão retorna 401.",
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrfToken": []
+          }
+        ],
+        "x-roles": [
+          "admin",
+          "operator"
+        ],
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Operação concluída. Sem corpo.",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Identificador opaco de sessão. HttpOnly; SameSite=Lax; Path=/; sem Domain. Secure em HTTPS. Valor de exemplo não utilizável.",
+                "schema": {
+                  "type": "string"
+                },
+                "example": "obraflow.sid=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0"
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "operationId": "getCurrentSession",
+        "summary": "Consultar sessão atual",
+        "description": "Retorna usuário, role, token CSRF da sessão atual e prazo absoluto; não renova expiração.",
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "x-roles": [
+          "admin",
+          "operator"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Consultar sessão atual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                },
+                "example": {
+                  "user": {
+                    "id": "00000000-0000-4000-8000-000000000002",
+                    "name": "Amanda",
+                    "email": "amanda@example.test",
+                    "role": "operator"
+                  },
+                  "expiresAt": "2026-10-24T21:00:00Z",
+                  "csrfToken": "ROTATED_CSRF_EXAMPLE_NOT_VALID"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "operationId": "listUsers",
+        "summary": "Listar usuários",
+        "description": "Somente Admin. Ordem name ASC, id ASC. Nunca retornar hash ou senha.",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "x-roles": [
+          "admin"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Role"
+            },
+            "description": "Filtrar role global."
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            "description": "Pesquisar nome ou e-mail, sem diferenciar maiúsculas/minúsculas."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Listar usuários",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPage"
+                },
+                "example": {
+                  "data": [
+                    {
+                      "id": "00000000-0000-4000-8000-000000000001",
+                      "name": "Admin de demonstração",
+                      "email": "admin@example.test",
+                      "role": "admin"
+                    },
+                    {
+                      "id": "00000000-0000-4000-8000-000000000002",
+                      "name": "Amanda",
+                      "email": "amanda@example.test",
+                      "role": "operator"
+                    }
+                  ],
+                  "meta": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 2,
+                    "totalPages": 1
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createUser",
+        "summary": "Cadastrar usuário",
+        "description": "Somente Admin. Nome com trim, e-mail normalizado em minúsculas e único. Senha de 12 a 128 caracteres, sem trim, armazenada como hash. Role admin ou operator, sem mudança de role nesta versão. O ID do recurso criado está no corpo; não há endpoint individual para usuário.",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrfToken": []
+          }
+        ],
+        "x-roles": [
+          "admin"
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Cadastrar usuário",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                },
+                "example": {
+                  "id": "00000000-0000-4000-8000-000000000002",
+                  "name": "Amanda",
+                  "email": "amanda@example.test",
+                  "role": "operator"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "description": "Já existe um usuário com este e-mail.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "EMAIL_ALREADY_EXISTS",
+                    "message": "Já existe um usuário com este e-mail.",
+                    "fields": [],
+                    "details": {},
+                    "requestId": "00000000-0000-4000-8000-000000000900"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserInput"
+              },
+              "example": {
+                "name": "Amanda",
+                "email": "amanda@example.test",
+                "password": "SenhaFicticiaExemplo2026!",
+                "role": "operator"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects": {
+      "get": {
+        "operationId": "listProjects",
+        "summary": "Listar obras",
+        "description": "Admin e Operador veem todas as obras, independentemente de responsabilidade. Ordem name ASC, id ASC. Todas as obras cadastradas estão disponíveis; sem arquivamento nesta versão.",
+        "tags": [
+          "Projects"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "x-roles": [
+          "admin",
+          "operator"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            "description": "Pesquisar nome sem diferenciar maiúsculas/minúsculas."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Listar obras",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectPage"
+                },
+                "example": {
+                  "data": [
+                    {
+                      "id": "00000000-0000-4000-8000-000000000010",
+                      "name": "Residencial Horizonte",
+                      "rulesRevision": 3
+                    }
+                  ],
+                  "meta": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createProject",
+        "summary": "Cadastrar obra",
+        "description": "Somente Admin. Nova obra inicia sem responsabilidades e sem faixas, revisão 0. Location: /api/v1/projects/{id}.",
+        "tags": [
+          "Projects"
+        ],
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrfToken": []
+          }
+        ],
+        "x-roles": [
+          "admin"
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Cadastrar obra",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                },
+                "example": {
+                  "id": "00000000-0000-4000-8000-000000000010",
+                  "name": "Residencial Horizonte",
+                  "rulesRevision": 0
+                }
+              }
+            },
+            "headers": {
+              "Location": {
+                "description": "Endereço do recurso criado, relativo à origem.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectInput"
+              },
+              "example": {
+                "name": "Residencial Horizonte"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{projectId}": {
+      "get": {
+        "operationId": "getProject",
+        "summary": "Consultar obra",
+        "description": "",
+        "tags": [
+          "Projects"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "x-roles": [
+          "admin",
+          "operator"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Consultar obra",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                },
+                "example": {
+                  "id": "00000000-0000-4000-8000-000000000010",
+                  "name": "Residencial Horizonte",
+                  "rulesRevision": 3
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateProject",
+        "summary": "Editar nome da obra",
+        "description": "Somente Admin; name é obrigatório nesta atualização. Não altera nomes históricos dos pedidos nem rulesRevision. Sem exclusão ou arquivamento.",
+        "tags": [
+          "Projects"
+        ],
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrfToken": []
+          }
+        ],
+        "x-roles": [
+          "admin"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Editar nome da obra",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                },
+                "example": {
+                  "id": "00000000-0000-4000-8000-000000000010",
+                  "name": "Residencial Horizonte - etapa 2",
+                  "rulesRevision": 3
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectInput"
+              },
+              "example": {
+                "name": "Residencial Horizonte - etapa 2"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/suppliers": {
+      "get": {
+        "operationId": "listSuppliers",
+        "summary": "Listar fornecedores",
+        "description": "Admin e Operador. Ordem name ASC, id ASC.",
+        "tags": [
+          "Suppliers"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "x-roles": [
+          "admin",
+          "operator"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "description": "Pesquisar nome sem diferenciar maiúsculas/minúsculas."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Listar fornecedores",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierPage"
+                },
+                "example": {
+                  "data": [
+                    {
+                      "id": "00000000-0000-4000-8000-000000000020",
+                      "name": "Materiais de demonstração"
+                    }
+                  ],
+                  "meta": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createSupplier",
+        "summary": "Cadastrar fornecedor",
+        "description": "Somente Admin. O ID do recurso criado está no corpo; não há endpoint individual para fornecedor.",
+        "tags": [
+          "Suppliers"
+        ],
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrfToken": []
+          }
+        ],
+        "x-roles": [
+          "admin"
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Cadastrar fornecedor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Supplier"
+                },
+                "example": {
+                  "id": "00000000-0000-4000-8000-000000000020",
+                  "name": "Materiais de demonstração"
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupplierInput"
+              },
+              "example": {
+                "name": "Materiais de demonstração"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/responsibilities": {
+      "get": {
+        "operationId": "listResponsibilities",
+        "summary": "Listar responsabilidades da obra",
+        "description": "Somente Admin. Ordem grantedAt DESC, id ASC. Os vínculos são registros de responsabilidade, não roles ou entidades Aprovador.",
+        "tags": [
+          "Responsibilities"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "x-roles": [
+          "admin"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Omitido inclui ativos e revogados."
+          },
+          {
+            "name": "operatorId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filtrar Operador."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Listar responsabilidades da obra",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponsibilityPage"
+                },
+                "example": {
+                  "data": [
+                    {
+                      "id": "00000000-0000-4000-8000-000000000030",
+                      "projectId": "00000000-0000-4000-8000-000000000010",
+                      "operator": {
+                        "id": "00000000-0000-4000-8000-000000000002",
+                        "name": "Amanda"
+                      },
+                      "active": true,
+                      "grantedBy": {
+                        "id": "00000000-0000-4000-8000-000000000001",
+                        "name": "Admin de demonstração"
+                      },
+                      "grantedAt": "2026-10-24T13:00:00Z",
+                      "revokedBy": null,
+                      "revokedAt": null
+                    }
+                  ],
+                  "meta": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "post": {
+        "operationId": "grantResponsibility",
+        "summary": "Conceder responsabilidade",
+        "description": "Somente Admin. Destinatário deve ser Operador. Não permitir vínculo ativo duplicado. Nova concessão após revogação cria outro registro; incrementar revisão da obra na mesma transação. Location aponta para coleção de responsabilidades da obra. O ID do recurso criado está no corpo; não há endpoint individual para responsabilidade.",
+        "tags": [
+          "Responsibilities"
+        ],
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrfToken": []
+          }
+        ],
+        "x-roles": [
+          "admin"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Conceder responsabilidade",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Responsibility"
+                },
+                "example": {
+                  "id": "00000000-0000-4000-8000-000000000030",
+                  "projectId": "00000000-0000-4000-8000-000000000010",
+                  "operator": {
+                    "id": "00000000-0000-4000-8000-000000000002",
+                    "name": "Amanda"
+                  },
+                  "active": true,
+                  "grantedBy": {
+                    "id": "00000000-0000-4000-8000-000000000001",
+                    "name": "Admin de demonstração"
+                  },
+                  "grantedAt": "2026-10-24T13:00:00Z",
+                  "revokedBy": null,
+                  "revokedAt": null
+                }
+              }
+            },
+            "headers": {
+              "X-Rules-Revision": {
+                "description": "Nova revisão da obra após concessão.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2147483647
+                },
+                "example": 1
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "description": "O operador já possui responsabilidade ativa nesta obra.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "RESPONSIBILITY_ALREADY_ACTIVE",
+                    "message": "O operador já possui responsabilidade ativa nesta obra.",
+                    "fields": [],
+                    "details": {},
+                    "requestId": "00000000-0000-4000-8000-000000000900"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponsibilityInput"
+              },
+              "example": {
+                "operatorId": "00000000-0000-4000-8000-000000000002"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/responsibilities/{responsibilityId}": {
+      "delete": {
+        "operationId": "revokeResponsibility",
+        "summary": "Revogar responsabilidade",
+        "description": "Somente Admin. Preserva registro, autor e instante. Retorna 409 RESPONSIBILITY_IN_USE se referenciado por qualquer etapa de regra vigente ou etapa pending/waiting de pedido pendente. Etapas approved/rejected/skipped não impedem revogação. Já revogado retorna 204 sem novo evento ou incremento. Incrementa revisão somente na primeira revogação válida.",
+        "tags": [
+          "Responsibilities"
+        ],
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrfToken": []
+          }
+        ],
+        "x-roles": [
+          "admin"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "responsibilityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Operação concluída. Sem corpo.",
+            "headers": {
+              "X-Rules-Revision": {
+                "description": "Revisão atual da obra.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 2147483647
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "description": "A responsabilidade ainda está em uso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "RESPONSIBILITY_IN_USE",
+                    "message": "A responsabilidade ainda está em uso.",
+                    "fields": [],
+                    "details": {
+                      "ruleCount": 1,
+                      "pendingOrderCount": 1,
+                      "ruleIds": [
+                        "00000000-0000-4000-8000-000000000040"
+                      ],
+                      "orderIds": [
+                        "00000000-0000-4000-8000-000000000050"
+                      ],
+                      "truncated": false
+                    },
+                    "requestId": "00000000-0000-4000-8000-000000000900"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/approval-rules": {
+      "get": {
+        "operationId": "getRules",
+        "summary": "Consultar configuração da obra",
+        "description": "Somente Admin. Retorna conjunto completo limitado a 50 faixas, revisão e lacunas. Ordem por limite inferior (null primeiro), id ASC. Cobertura considera valores monetários não negativos representáveis em centavos.",
+        "tags": [
+          "Rules"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "x-roles": [
+          "admin"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Consultar configuração da obra",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Configuration"
+                },
+                "example": {
+                  "projectId": "00000000-0000-4000-8000-000000000010",
+                  "revision": 3,
+                  "rules": [
+                    {
+                      "id": "00000000-0000-4000-8000-000000000040",
+                      "lowerExclusive": null,
+                      "upperInclusive": "10000.00",
+                      "steps": [
+                        {
+                          "id": "00000000-0000-4000-8000-000000000041",
+                          "position": 1,
+                          "responsibilityId": "00000000-0000-4000-8000-000000000030",
+                          "operator": {
+                            "id": "00000000-0000-4000-8000-000000000002",
+                            "name": "Amanda"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "00000000-0000-4000-8000-000000000042",
+                      "lowerExclusive": "10000.00",
+                      "upperInclusive": null,
+                      "steps": [
+                        {
+                          "id": "00000000-0000-4000-8000-000000000043",
+                          "position": 1,
+                          "responsibilityId": "00000000-0000-4000-8000-000000000030",
+                          "operator": {
+                            "id": "00000000-0000-4000-8000-000000000002",
+                            "name": "Amanda"
+                          }
+                        },
+                        {
+                          "id": "00000000-0000-4000-8000-000000000044",
+                          "position": 2,
+                          "responsibilityId": "00000000-0000-4000-8000-000000000031",
+                          "operator": {
+                            "id": "00000000-0000-4000-8000-000000000003",
+                            "name": "João"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "coverage": {
+                    "complete": true,
+                    "gaps": []
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "put": {
+        "operationId": "replaceRules",
+        "summary": "Salvar configuração completa",
+        "description": "Somente Admin. rules substitui o conjunto inteiro em uma transação; [] remove todas as faixas. IDs existentes da mesma obra preservam identidade; omitidos são removidos e novos são gerados. Ordem do array steps define position, 1..20. Conferir revisão antes de alterar, validar vínculos ativos da mesma obra, não repetir operador nem sobrepor faixas. Incrementar revisão uma vez, inclusive em PUT válido sem diferenças. Não altera pedidos existentes.",
+        "tags": [
+          "Rules"
+        ],
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrfToken": []
+          }
+        ],
+        "x-roles": [
+          "admin"
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Salvar configuração completa",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Configuration"
+                },
+                "example": {
+                  "projectId": "00000000-0000-4000-8000-000000000010",
+                  "revision": 3,
+                  "rules": [
+                    {
+                      "id": "00000000-0000-4000-8000-000000000040",
+                      "lowerExclusive": null,
+                      "upperInclusive": "10000.00",
+                      "steps": [
+                        {
+                          "id": "00000000-0000-4000-8000-000000000041",
+                          "position": 1,
+                          "responsibilityId": "00000000-0000-4000-8000-000000000030",
+                          "operator": {
+                            "id": "00000000-0000-4000-8000-000000000002",
+                            "name": "Amanda"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "00000000-0000-4000-8000-000000000042",
+                      "lowerExclusive": "10000.00",
+                      "upperInclusive": null,
+                      "steps": [
+                        {
+                          "id": "00000000-0000-4000-8000-000000000043",
+                          "position": 1,
+                          "responsibilityId": "00000000-0000-4000-8000-000000000030",
+                          "operator": {
+                            "id": "00000000-0000-4000-8000-000000000002",
+                            "name": "Amanda"
+                          }
+                        },
+                        {
+                          "id": "00000000-0000-4000-8000-000000000044",
+                          "position": 2,
+                          "responsibilityId": "00000000-0000-4000-8000-000000000031",
+                          "operator": {
+                            "id": "00000000-0000-4000-8000-000000000003",
+                            "name": "João"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "coverage": {
+                    "complete": true,
+                    "gaps": []
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "description": "A configuração foi alterada. Recarregue antes de salvar.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "RULES_REVISION_CONFLICT",
+                    "message": "A configuração foi alterada. Recarregue antes de salvar.",
+                    "fields": [],
+                    "details": {
+                      "currentRevision": 4
+                    },
+                    "requestId": "00000000-0000-4000-8000-000000000900"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfigurationInput"
+              },
+              "example": {
+                "expectedRevision": 2,
+                "rules": [
+                  {
+                    "lowerExclusive": null,
+                    "upperInclusive": "10000.00",
+                    "steps": [
+                      {
+                        "responsibilityId": "00000000-0000-4000-8000-000000000030"
+                      }
+                    ]
+                  },
+                  {
+                    "lowerExclusive": "10000.00",
+                    "upperInclusive": null,
+                    "steps": [
+                      {
+                        "responsibilityId": "00000000-0000-4000-8000-000000000030"
+                      },
+                      {
+                        "responsibilityId": "00000000-0000-4000-8000-000000000031"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/purchase-orders": {
+      "post": {
+        "operationId": "createOrder",
+        "summary": "Cadastrar pedido",
+        "description": "Somente Operador. Não exige responsabilidade na obra. Backend deriva solicitante, calcula totais, escolhe faixa e copia cadeia com vínculos ativos; grava tudo atomicamente. Version inicia em 1. Nunca aprovar automaticamente, inclusive quando solicitante ocupa primeira etapa. Location: /api/v1/purchase-orders/{id}. Sem garantia de idempotência de cadastro.",
+        "tags": [
+          "Orders"
+        ],
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrfToken": []
+          }
+        ],
+        "x-roles": [
+          "operator"
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Cadastrar pedido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                },
+                "example": {
+                  "id": "00000000-0000-4000-8000-000000000050",
+                  "reference": "PC-000001",
+                  "project": {
+                    "id": "00000000-0000-4000-8000-000000000010",
+                    "name": "Residencial Horizonte"
+                  },
+                  "supplier": {
+                    "id": "00000000-0000-4000-8000-000000000020",
+                    "name": "Materiais de demonstração"
+                  },
+                  "requester": {
+                    "id": "00000000-0000-4000-8000-000000000002",
+                    "name": "Amanda"
+                  },
+                  "orderDate": "2026-10-24",
+                  "itemCount": 2,
+                  "total": "1000.00",
+                  "status": "pending",
+                  "version": 1,
+                  "currentStepPosition": 1,
+                  "steps": [
+                    {
+                      "id": "00000000-0000-4000-8000-000000000060",
+                      "position": 1,
+                      "responsibilityId": "00000000-0000-4000-8000-000000000030",
+                      "operator": {
+                        "id": "00000000-0000-4000-8000-000000000002",
+                        "name": "Amanda"
+                      },
+                      "status": "pending",
+                      "decidedBy": null,
+                      "decidedAt": null,
+                      "rejectionReason": null
+                    }
+                  ],
+                  "availableActions": {
+                    "canApprove": true,
+                    "canReject": true,
+                    "reason": null
+                  },
+                  "createdAt": "2026-10-24T13:00:00Z",
+                  "notes": "Material para a etapa de fundação.",
+                  "items": [
+                    {
+                      "id": "00000000-0000-4000-8000-000000000051",
+                      "position": 1,
+                      "description": "Cimento",
+                      "quantity": "10.000",
+                      "unit": "un",
+                      "unitPrice": "50.00",
+                      "total": "500.00"
+                    },
+                    {
+                      "id": "00000000-0000-4000-8000-000000000052",
+                      "position": 2,
+                      "description": "Areia",
+                      "quantity": "2.500",
+                      "unit": "m³",
+                      "unitPrice": "200.00",
+                      "total": "500.00"
+                    }
+                  ],
+                  "ruleSnapshot": {
+                    "sourceRuleId": "00000000-0000-4000-8000-000000000040",
+                    "revision": 3,
+                    "lowerExclusive": null,
+                    "upperInclusive": "10000.00"
+                  },
+                  "history": [
+                    {
+                      "type": "created",
+                      "actor": {
+                        "id": "00000000-0000-4000-8000-000000000002",
+                        "name": "Amanda"
+                      },
+                      "occurredAt": "2026-10-24T13:00:00Z",
+                      "stepId": null,
+                      "reason": null
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Location": {
+                "description": "Endereço do recurso criado, relativo à origem.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "400": {
+            "description": "Nenhuma regra de alçada cobre o valor deste pedido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "RULE_NOT_APPLICABLE",
+                    "message": "Nenhuma regra de alçada cobre o valor deste pedido.",
+                    "fields": [],
+                    "details": {},
+                    "requestId": "00000000-0000-4000-8000-000000000900"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderInput"
+              },
+              "example": {
+                "projectId": "00000000-0000-4000-8000-000000000010",
+                "supplierId": "00000000-0000-4000-8000-000000000020",
+                "orderDate": "2026-10-24",
+                "notes": "Material para a etapa de fundação.",
+                "items": [
+                  {
+                    "description": "Cimento",
+                    "quantity": "10.000",
+                    "unit": "un",
+                    "unitPrice": "50.00"
+                  },
+                  {
+                    "description": "Areia",
+                    "quantity": "2.500",
+                    "unit": "m³",
+                    "unitPrice": "200.00"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listOrders",
+        "summary": "Listar pedidos acessíveis",
+        "description": "Admin vê todos; Operador vê os próprios ou aqueles cuja cadeia inclui sua conta, inclusive concluídos e após revogação do vínculo. Filtros adicionais se combinam por AND e nunca ampliam acesso. mineOnly/awaitingMyDecision true para Admin retorna 400 VALIDATION_ERROR. Ordem createdAt DESC, id ASC; totais da paginação também respeitam o acesso.",
+        "tags": [
+          "Orders"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "x-roles": [
+          "admin",
+          "operator"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2147483647,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "projectId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filtrar obra."
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/OrderStatus"
+            },
+            "description": "Filtrar situação."
+          },
+          {
+            "name": "mineOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Restringir a pedidos próprios; somente Operador."
+          },
+          {
+            "name": "awaitingMyDecision",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Restringir à etapa atual atribuída à conta; somente Operador."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Listar pedidos acessíveis",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderSummaryPage"
+                },
+                "example": {
+                  "data": [
+                    {
+                      "id": "00000000-0000-4000-8000-000000000050",
+                      "reference": "PC-000001",
+                      "project": {
+                        "id": "00000000-0000-4000-8000-000000000010",
+                        "name": "Residencial Horizonte"
+                      },
+                      "supplier": {
+                        "id": "00000000-0000-4000-8000-000000000020",
+                        "name": "Materiais de demonstração"
+                      },
+                      "requester": {
+                        "id": "00000000-0000-4000-8000-000000000002",
+                        "name": "Amanda"
+                      },
+                      "orderDate": "2026-10-24",
+                      "itemCount": 2,
+                      "total": "1000.00",
+                      "status": "pending",
+                      "version": 1,
+                      "currentStepPosition": 1,
+                      "steps": [
+                        {
+                          "id": "00000000-0000-4000-8000-000000000060",
+                          "position": 1,
+                          "responsibilityId": "00000000-0000-4000-8000-000000000030",
+                          "operator": {
+                            "id": "00000000-0000-4000-8000-000000000002",
+                            "name": "Amanda"
+                          },
+                          "status": "pending",
+                          "decidedBy": null,
+                          "decidedAt": null,
+                          "rejectionReason": null
+                        }
+                      ],
+                      "availableActions": {
+                        "canApprove": true,
+                        "canReject": true,
+                        "reason": null
+                      },
+                      "createdAt": "2026-10-24T13:00:00Z"
+                    }
+                  ],
+                  "meta": {
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 1,
+                    "totalPages": 1
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/purchase-orders/{orderId}": {
+      "get": {
+        "operationId": "getOrder",
+        "summary": "Consultar pedido completo",
+        "description": "Mesma autorização da listagem. Pedido fora de acesso retorna 404. Nomes de obra, fornecedor e operadores são cópias históricas; sourceRuleId pode virar null. availableActions depende da conta autenticada e não é autorização independente.",
+        "tags": [
+          "Orders"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "x-roles": [
+          "admin",
+          "operator"
+        ],
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Consultar pedido completo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                },
+                "example": {
+                  "id": "00000000-0000-4000-8000-000000000050",
+                  "reference": "PC-000001",
+                  "project": {
+                    "id": "00000000-0000-4000-8000-000000000010",
+                    "name": "Residencial Horizonte"
+                  },
+                  "supplier": {
+                    "id": "00000000-0000-4000-8000-000000000020",
+                    "name": "Materiais de demonstração"
+                  },
+                  "requester": {
+                    "id": "00000000-0000-4000-8000-000000000002",
+                    "name": "Amanda"
+                  },
+                  "orderDate": "2026-10-24",
+                  "itemCount": 2,
+                  "total": "1000.00",
+                  "status": "pending",
+                  "version": 1,
+                  "currentStepPosition": 1,
+                  "steps": [
+                    {
+                      "id": "00000000-0000-4000-8000-000000000060",
+                      "position": 1,
+                      "responsibilityId": "00000000-0000-4000-8000-000000000030",
+                      "operator": {
+                        "id": "00000000-0000-4000-8000-000000000002",
+                        "name": "Amanda"
+                      },
+                      "status": "pending",
+                      "decidedBy": null,
+                      "decidedAt": null,
+                      "rejectionReason": null
+                    }
+                  ],
+                  "availableActions": {
+                    "canApprove": true,
+                    "canReject": true,
+                    "reason": null
+                  },
+                  "createdAt": "2026-10-24T13:00:00Z",
+                  "notes": "Material para a etapa de fundação.",
+                  "items": [
+                    {
+                      "id": "00000000-0000-4000-8000-000000000051",
+                      "position": 1,
+                      "description": "Cimento",
+                      "quantity": "10.000",
+                      "unit": "un",
+                      "unitPrice": "50.00",
+                      "total": "500.00"
+                    },
+                    {
+                      "id": "00000000-0000-4000-8000-000000000052",
+                      "position": 2,
+                      "description": "Areia",
+                      "quantity": "2.500",
+                      "unit": "m³",
+                      "unitPrice": "200.00",
+                      "total": "500.00"
+                    }
+                  ],
+                  "ruleSnapshot": {
+                    "sourceRuleId": "00000000-0000-4000-8000-000000000040",
+                    "revision": 3,
+                    "lowerExclusive": null,
+                    "upperInclusive": "10000.00"
+                  },
+                  "history": [
+                    {
+                      "type": "created",
+                      "actor": {
+                        "id": "00000000-0000-4000-8000-000000000002",
+                        "name": "Amanda"
+                      },
+                      "occurredAt": "2026-10-24T13:00:00Z",
+                      "stepId": null,
+                      "reason": null
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/purchase-orders/{orderId}/decisions": {
+      "post": {
+        "operationId": "decideOrder",
+        "summary": "Decidir etapa atual",
+        "description": "Exigir acesso ao pedido, role Operador, stepId e versão atuais, pedido pendente, responsabilidade ativa e atribuição à conta. Identidade do autor é derivada da sessão. Aprovação própria permitida manualmente. reason obrigatório somente em reject e proibido em approve. Sucesso incrementa versão em 1; aprovação intermediária libera próxima etapa, última conclui; rejeição marca futuras skipped. Não repetir automaticamente.",
+        "tags": [
+          "Orders"
+        ],
+        "security": [
+          {
+            "sessionCookie": [],
+            "csrfToken": []
+          }
+        ],
+        "x-roles": [
+          "operator"
+        ],
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Decidir etapa atual",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                },
+                "examples": {
+                  "approved": {
+                    "summary": "Última etapa aprovada",
+                    "value": {
+                      "id": "00000000-0000-4000-8000-000000000050",
+                      "reference": "PC-000001",
+                      "project": {
+                        "id": "00000000-0000-4000-8000-000000000010",
+                        "name": "Residencial Horizonte"
+                      },
+                      "supplier": {
+                        "id": "00000000-0000-4000-8000-000000000020",
+                        "name": "Materiais de demonstração"
+                      },
+                      "requester": {
+                        "id": "00000000-0000-4000-8000-000000000002",
+                        "name": "Amanda"
+                      },
+                      "orderDate": "2026-10-24",
+                      "itemCount": 2,
+                      "total": "1000.00",
+                      "status": "approved",
+                      "version": 2,
+                      "currentStepPosition": null,
+                      "steps": [
+                        {
+                          "id": "00000000-0000-4000-8000-000000000060",
+                          "position": 1,
+                          "responsibilityId": "00000000-0000-4000-8000-000000000030",
+                          "operator": {
+                            "id": "00000000-0000-4000-8000-000000000002",
+                            "name": "Amanda"
+                          },
+                          "status": "approved",
+                          "decidedBy": {
+                            "id": "00000000-0000-4000-8000-000000000002",
+                            "name": "Amanda"
+                          },
+                          "decidedAt": "2026-10-24T13:05:00Z",
+                          "rejectionReason": null
+                        }
+                      ],
+                      "availableActions": {
+                        "canApprove": false,
+                        "canReject": false,
+                        "reason": "ORDER_COMPLETED"
+                      },
+                      "createdAt": "2026-10-24T13:00:00Z",
+                      "notes": "Material para a etapa de fundação.",
+                      "items": [
+                        {
+                          "id": "00000000-0000-4000-8000-000000000051",
+                          "position": 1,
+                          "description": "Cimento",
+                          "quantity": "10.000",
+                          "unit": "un",
+                          "unitPrice": "50.00",
+                          "total": "500.00"
+                        },
+                        {
+                          "id": "00000000-0000-4000-8000-000000000052",
+                          "position": 2,
+                          "description": "Areia",
+                          "quantity": "2.500",
+                          "unit": "m³",
+                          "unitPrice": "200.00",
+                          "total": "500.00"
+                        }
+                      ],
+                      "ruleSnapshot": {
+                        "sourceRuleId": "00000000-0000-4000-8000-000000000040",
+                        "revision": 3,
+                        "lowerExclusive": null,
+                        "upperInclusive": "10000.00"
+                      },
+                      "history": [
+                        {
+                          "type": "created",
+                          "actor": {
+                            "id": "00000000-0000-4000-8000-000000000002",
+                            "name": "Amanda"
+                          },
+                          "occurredAt": "2026-10-24T13:00:00Z",
+                          "stepId": null,
+                          "reason": null
+                        },
+                        {
+                          "type": "approved",
+                          "actor": {
+                            "id": "00000000-0000-4000-8000-000000000002",
+                            "name": "Amanda"
+                          },
+                          "occurredAt": "2026-10-24T13:05:00Z",
+                          "stepId": "00000000-0000-4000-8000-000000000060",
+                          "reason": null
+                        }
+                      ]
+                    }
+                  },
+                  "rejected": {
+                    "summary": "Pedido rejeitado",
+                    "value": {
+                      "id": "00000000-0000-4000-8000-000000000050",
+                      "reference": "PC-000001",
+                      "project": {
+                        "id": "00000000-0000-4000-8000-000000000010",
+                        "name": "Residencial Horizonte"
+                      },
+                      "supplier": {
+                        "id": "00000000-0000-4000-8000-000000000020",
+                        "name": "Materiais de demonstração"
+                      },
+                      "requester": {
+                        "id": "00000000-0000-4000-8000-000000000002",
+                        "name": "Amanda"
+                      },
+                      "orderDate": "2026-10-24",
+                      "itemCount": 2,
+                      "total": "1000.00",
+                      "status": "rejected",
+                      "version": 2,
+                      "currentStepPosition": null,
+                      "steps": [
+                        {
+                          "id": "00000000-0000-4000-8000-000000000060",
+                          "position": 1,
+                          "responsibilityId": "00000000-0000-4000-8000-000000000030",
+                          "operator": {
+                            "id": "00000000-0000-4000-8000-000000000002",
+                            "name": "Amanda"
+                          },
+                          "status": "rejected",
+                          "decidedBy": {
+                            "id": "00000000-0000-4000-8000-000000000002",
+                            "name": "Amanda"
+                          },
+                          "decidedAt": "2026-10-24T13:05:00Z",
+                          "rejectionReason": "Quantidade superior à necessidade da obra."
+                        }
+                      ],
+                      "availableActions": {
+                        "canApprove": false,
+                        "canReject": false,
+                        "reason": "ORDER_COMPLETED"
+                      },
+                      "createdAt": "2026-10-24T13:00:00Z",
+                      "notes": "Material para a etapa de fundação.",
+                      "items": [
+                        {
+                          "id": "00000000-0000-4000-8000-000000000051",
+                          "position": 1,
+                          "description": "Cimento",
+                          "quantity": "10.000",
+                          "unit": "un",
+                          "unitPrice": "50.00",
+                          "total": "500.00"
+                        },
+                        {
+                          "id": "00000000-0000-4000-8000-000000000052",
+                          "position": 2,
+                          "description": "Areia",
+                          "quantity": "2.500",
+                          "unit": "m³",
+                          "unitPrice": "200.00",
+                          "total": "500.00"
+                        }
+                      ],
+                      "ruleSnapshot": {
+                        "sourceRuleId": "00000000-0000-4000-8000-000000000040",
+                        "revision": 3,
+                        "lowerExclusive": null,
+                        "upperInclusive": "10000.00"
+                      },
+                      "history": [
+                        {
+                          "type": "created",
+                          "actor": {
+                            "id": "00000000-0000-4000-8000-000000000002",
+                            "name": "Amanda"
+                          },
+                          "occurredAt": "2026-10-24T13:00:00Z",
+                          "stepId": null,
+                          "reason": null
+                        },
+                        {
+                          "type": "rejected",
+                          "actor": {
+                            "id": "00000000-0000-4000-8000-000000000002",
+                            "name": "Amanda"
+                          },
+                          "occurredAt": "2026-10-24T13:05:00Z",
+                          "stepId": "00000000-0000-4000-8000-000000000060",
+                          "reason": "Quantidade superior à necessidade da obra."
+                        }
+                      ]
+                    }
+                  },
+                  "intermediate": {
+                    "summary": "Amanda aprovou a primeira etapa; João deve decidir a próxima",
+                    "value": {
+                      "id": "00000000-0000-4000-8000-000000000050",
+                      "reference": "PC-000001",
+                      "project": {
+                        "id": "00000000-0000-4000-8000-000000000010",
+                        "name": "Residencial Horizonte"
+                      },
+                      "supplier": {
+                        "id": "00000000-0000-4000-8000-000000000020",
+                        "name": "Materiais de demonstração"
+                      },
+                      "requester": {
+                        "id": "00000000-0000-4000-8000-000000000002",
+                        "name": "Amanda"
+                      },
+                      "orderDate": "2026-10-24",
+                      "itemCount": 2,
+                      "total": "15000.00",
+                      "status": "pending",
+                      "version": 2,
+                      "currentStepPosition": 2,
+                      "steps": [
+                        {
+                          "id": "00000000-0000-4000-8000-000000000060",
+                          "position": 1,
+                          "responsibilityId": "00000000-0000-4000-8000-000000000030",
+                          "operator": {
+                            "id": "00000000-0000-4000-8000-000000000002",
+                            "name": "Amanda"
+                          },
+                          "status": "approved",
+                          "decidedBy": {
+                            "id": "00000000-0000-4000-8000-000000000002",
+                            "name": "Amanda"
+                          },
+                          "decidedAt": "2026-10-24T13:05:00Z",
+                          "rejectionReason": null
+                        },
+                        {
+                          "id": "00000000-0000-4000-8000-000000000061",
+                          "position": 2,
+                          "responsibilityId": "00000000-0000-4000-8000-000000000031",
+                          "operator": {
+                            "id": "00000000-0000-4000-8000-000000000003",
+                            "name": "João"
+                          },
+                          "status": "pending",
+                          "decidedBy": null,
+                          "decidedAt": null,
+                          "rejectionReason": null
+                        }
+                      ],
+                      "availableActions": {
+                        "canApprove": false,
+                        "canReject": false,
+                        "reason": "NOT_ASSIGNED"
+                      },
+                      "createdAt": "2026-10-24T13:00:00Z",
+                      "notes": "Material para a etapa de fundação.",
+                      "items": [
+                        {
+                          "id": "00000000-0000-4000-8000-000000000051",
+                          "position": 1,
+                          "description": "Cimento",
+                          "quantity": "10.000",
+                          "unit": "un",
+                          "unitPrice": "1000.00",
+                          "total": "10000.00"
+                        },
+                        {
+                          "id": "00000000-0000-4000-8000-000000000052",
+                          "position": 2,
+                          "description": "Areia",
+                          "quantity": "2.500",
+                          "unit": "m³",
+                          "unitPrice": "2000.00",
+                          "total": "5000.00"
+                        }
+                      ],
+                      "ruleSnapshot": {
+                        "sourceRuleId": "00000000-0000-4000-8000-000000000042",
+                        "revision": 3,
+                        "lowerExclusive": "10000.00",
+                        "upperInclusive": null
+                      },
+                      "history": [
+                        {
+                          "type": "created",
+                          "actor": {
+                            "id": "00000000-0000-4000-8000-000000000002",
+                            "name": "Amanda"
+                          },
+                          "occurredAt": "2026-10-24T13:00:00Z",
+                          "stepId": null,
+                          "reason": null
+                        },
+                        {
+                          "type": "approved",
+                          "actor": {
+                            "id": "00000000-0000-4000-8000-000000000002",
+                            "name": "Amanda"
+                          },
+                          "occurredAt": "2026-10-24T13:05:00Z",
+                          "stepId": "00000000-0000-4000-8000-000000000060",
+                          "reason": null
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "description": "O pedido foi alterado. Recarregue antes de decidir.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": {
+                    "code": "ORDER_VERSION_CONFLICT",
+                    "message": "O pedido foi alterado. Recarregue antes de decidir.",
+                    "fields": [],
+                    "details": {
+                      "currentVersion": 2,
+                      "currentStepId": null
+                    },
+                    "requestId": "00000000-0000-4000-8000-000000000900"
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "no-store"
+                  ]
+                },
+                "description": "Não armazenar resposta em cache HTTP."
+              },
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Correlação gerada no servidor, também presente no corpo de erros."
+              }
+            }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionInput"
+              },
+              "examples": {
+                "approve": {
+                  "summary": "Aprovar inclusive o próprio pedido",
+                  "value": {
+                    "stepId": "00000000-0000-4000-8000-000000000060",
+                    "expectedVersion": 1,
+                    "decision": "approve"
+                  }
+                },
+                "reject": {
+                  "summary": "Rejeitar com motivo",
+                  "value": {
+                    "stepId": "00000000-0000-4000-8000-000000000060",
+                    "expectedVersion": 1,
+                    "decision": "reject",
+                    "reason": "Quantidade superior à necessidade da obra."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "obraflow.sid",
+        "description": "Identificador opaco HttpOnly validado no PostgreSQL. Sessão anônima aceita somente no login para CSRF; operações privadas exigem usuário autenticado. Expiração absoluta de 8h, sem renovação por atividade."
+      },
+      "csrfToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-CSRF-Token",
+        "description": "Token sincronizado à sessão, devolvido no bootstrap e rotacionado no login. Exigido em POST, PUT, PATCH e DELETE, inclusive login/logout. Não substitui autenticação."
+      }
+    },
+    "schemas": {
+      "Role": {
+        "type": "string",
+        "enum": [
+          "admin",
+          "operator"
+        ]
+      },
+      "OrderStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "approved",
+          "rejected"
+        ]
+      },
+      "StepStatus": {
+        "type": "string",
+        "enum": [
+          "waiting",
+          "pending",
+          "approved",
+          "rejected",
+          "skipped"
+        ]
+      },
+      "Identity": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "User": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email",
+          "role"
+        ]
+      },
+      "Page": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          }
+        },
+        "required": [
+          "page",
+          "pageSize",
+          "total",
+          "totalPages"
+        ]
+      },
+      "FieldError": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "path",
+          "code",
+          "message"
+        ]
+      },
+      "Error": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "$ref": "#/components/schemas/ErrorCode"
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              },
+              "fields": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/FieldError"
+                }
+              },
+              "details": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "requestId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "fields",
+              "details",
+              "requestId"
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "Csrf": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "csrfToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "authenticated": {
+            "type": "boolean"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "csrfToken",
+          "authenticated",
+          "expiresAt"
+        ]
+      },
+      "LoginInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "CreateUserInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          },
+          "password": {
+            "type": "string",
+            "minLength": 12,
+            "maxLength": 128,
+            "writeOnly": true
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "password",
+          "role"
+        ]
+      },
+      "Session": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "csrfToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        },
+        "required": [
+          "user",
+          "expiresAt",
+          "csrfToken"
+        ]
+      },
+      "Project": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "rulesRevision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "rulesRevision"
+        ]
+      },
+      "ProjectInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "Supplier": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "SupplierInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "ResponsibilityInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "operatorId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "operatorId"
+        ]
+      },
+      "Responsibility": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "operator": {
+            "$ref": "#/components/schemas/Identity"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "grantedBy": {
+            "$ref": "#/components/schemas/Identity"
+          },
+          "grantedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "revokedBy": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "nullable": true
+          },
+          "revokedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "operator",
+          "active",
+          "grantedBy",
+          "grantedAt",
+          "revokedBy",
+          "revokedAt"
+        ]
+      },
+      "RuleStepInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "responsibilityId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "responsibilityId"
+        ]
+      },
+      "RuleStep": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20
+          },
+          "responsibilityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "operator": {
+            "$ref": "#/components/schemas/Identity"
+          }
+        },
+        "required": [
+          "id",
+          "position",
+          "responsibilityId",
+          "operator"
+        ]
+      },
+      "RuleInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lowerExclusive": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]{0,15})\\.[0-9]{2}$",
+            "description": "Limite em BRL com duas casas; null representa ausência de limite.",
+            "nullable": true
+          },
+          "upperInclusive": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]{0,15})\\.[0-9]{2}$",
+            "description": "Limite em BRL com duas casas; null representa ausência de limite.",
+            "nullable": true
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuleStepInput"
+            },
+            "minItems": 1,
+            "maxItems": 20
+          }
+        },
+        "required": [
+          "lowerExclusive",
+          "upperInclusive",
+          "steps"
+        ]
+      },
+      "Rule": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lowerExclusive": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]{0,15})\\.[0-9]{2}$",
+            "description": "Limite em BRL com duas casas; null representa ausência de limite.",
+            "nullable": true
+          },
+          "upperInclusive": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]{0,15})\\.[0-9]{2}$",
+            "description": "Limite em BRL com duas casas; null representa ausência de limite.",
+            "nullable": true
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuleStep"
+            },
+            "minItems": 1,
+            "maxItems": 20
+          }
+        },
+        "required": [
+          "id",
+          "lowerExclusive",
+          "upperInclusive",
+          "steps"
+        ]
+      },
+      "ConfigurationInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "expectedRevision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuleInput"
+            },
+            "maxItems": 50
+          }
+        },
+        "required": [
+          "expectedRevision",
+          "rules"
+        ]
+      },
+      "Configuration": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Rule"
+            },
+            "maxItems": 50
+          },
+          "coverage": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "complete": {
+                "type": "boolean"
+              },
+              "gaps": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "lowerExclusive": {
+                      "type": "string",
+                      "pattern": "^(?:0|[1-9][0-9]{0,15})\\.[0-9]{2}$",
+                      "description": "Limite em BRL com duas casas; null representa ausência de limite.",
+                      "nullable": true
+                    },
+                    "upperInclusive": {
+                      "type": "string",
+                      "pattern": "^(?:0|[1-9][0-9]{0,15})\\.[0-9]{2}$",
+                      "description": "Limite em BRL com duas casas; null representa ausência de limite.",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "lowerExclusive",
+                    "upperInclusive"
+                  ]
+                },
+                "maxItems": 51
+              }
+            },
+            "required": [
+              "complete",
+              "gaps"
+            ]
+          }
+        },
+        "required": [
+          "projectId",
+          "revision",
+          "rules",
+          "coverage"
+        ]
+      },
+      "ItemInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "quantity": {
+            "type": "string",
+            "pattern": "^(?!0(?:\\.0{1,3})?$)(?:0|[1-9][0-9]{0,5})(?:\\.[0-9]{1,3})?$",
+            "description": "Maior que zero e até 999999.999; saída com três casas."
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10
+          },
+          "unitPrice": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]{0,9})(?:\\.[0-9]{1,2})?$",
+            "description": "De 0 a 9999999999.99; saída com duas casas."
+          }
+        },
+        "required": [
+          "description",
+          "quantity",
+          "unit",
+          "unitPrice"
+        ]
+      },
+      "OrderInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplierId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "notes": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 2000,
+            "nullable": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemInput"
+            },
+            "minItems": 1,
+            "maxItems": 100
+          }
+        },
+        "required": [
+          "projectId",
+          "supplierId",
+          "orderDate",
+          "items"
+        ]
+      },
+      "Item": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "quantity": {
+            "type": "string",
+            "pattern": "^(?!0\\.000$)(?:0|[1-9][0-9]{0,5})\\.[0-9]{3}$",
+            "description": "Maior que zero e até 999999.999; saída com três casas."
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10
+          },
+          "unitPrice": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]{0,9})\\.[0-9]{2}$",
+            "description": "De 0 a 9999999999.99; saída com duas casas."
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]{0,15})\\.[0-9]{2}$",
+            "description": "BRL canônico com duas casas; máximo 9999999999999999.99."
+          }
+        },
+        "required": [
+          "id",
+          "position",
+          "description",
+          "quantity",
+          "unit",
+          "unitPrice",
+          "total"
+        ]
+      },
+      "Step": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20
+          },
+          "responsibilityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "operator": {
+            "$ref": "#/components/schemas/Identity"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StepStatus"
+          },
+          "decidedBy": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "nullable": true
+          },
+          "decidedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "rejectionReason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000,
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "position",
+          "responsibilityId",
+          "operator",
+          "status",
+          "decidedBy",
+          "decidedAt",
+          "rejectionReason"
+        ]
+      },
+      "Actions": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "canApprove": {
+            "type": "boolean"
+          },
+          "canReject": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              null,
+              "ORDER_COMPLETED",
+              "ADMIN_READ_ONLY",
+              "WAITING_PREVIOUS_STEP",
+              "NOT_ASSIGNED",
+              "RESPONSIBILITY_INACTIVE"
+            ]
+          }
+        },
+        "required": [
+          "canApprove",
+          "canReject",
+          "reason"
+        ]
+      },
+      "RuleSnapshot": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "sourceRuleId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483647
+          },
+          "lowerExclusive": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]{0,15})\\.[0-9]{2}$",
+            "description": "Limite em BRL com duas casas; null representa ausência de limite.",
+            "nullable": true
+          },
+          "upperInclusive": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]{0,15})\\.[0-9]{2}$",
+            "description": "Limite em BRL com duas casas; null representa ausência de limite.",
+            "nullable": true
+          }
+        },
+        "required": [
+          "sourceRuleId",
+          "revision",
+          "lowerExclusive",
+          "upperInclusive"
+        ]
+      },
+      "HistoryEntry": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "created",
+              "approved",
+              "rejected"
+            ]
+          },
+          "actor": {
+            "$ref": "#/components/schemas/Identity"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "stepId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000,
+            "nullable": true
+          }
+        },
+        "required": [
+          "type",
+          "actor",
+          "occurredAt",
+          "stepId",
+          "reason"
+        ]
+      },
+      "ApproveInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "stepId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "approve"
+            ]
+          }
+        },
+        "required": [
+          "stepId",
+          "expectedVersion",
+          "decision"
+        ]
+      },
+      "RejectInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "stepId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "reject"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "stepId",
+          "expectedVersion",
+          "decision",
+          "reason"
+        ]
+      },
+      "DecisionInput": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ApproveInput"
+          },
+          {
+            "$ref": "#/components/schemas/RejectInput"
+          }
+        ]
+      },
+      "OrderSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reference": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "project": {
+            "$ref": "#/components/schemas/Identity"
+          },
+          "supplier": {
+            "$ref": "#/components/schemas/Identity"
+          },
+          "requester": {
+            "$ref": "#/components/schemas/Identity"
+          },
+          "orderDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "itemCount": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]{0,15})\\.[0-9]{2}$",
+            "description": "BRL canônico com duas casas; máximo 9999999999999999.99."
+          },
+          "status": {
+            "$ref": "#/components/schemas/OrderStatus"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "currentStepPosition": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20,
+            "nullable": true
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Step"
+            },
+            "minItems": 1,
+            "maxItems": 20
+          },
+          "availableActions": {
+            "$ref": "#/components/schemas/Actions"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "reference",
+          "project",
+          "supplier",
+          "requester",
+          "orderDate",
+          "itemCount",
+          "total",
+          "status",
+          "version",
+          "currentStepPosition",
+          "steps",
+          "availableActions",
+          "createdAt"
+        ]
+      },
+      "Order": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reference": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "project": {
+            "$ref": "#/components/schemas/Identity"
+          },
+          "supplier": {
+            "$ref": "#/components/schemas/Identity"
+          },
+          "requester": {
+            "$ref": "#/components/schemas/Identity"
+          },
+          "orderDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "itemCount": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9][0-9]{0,15})\\.[0-9]{2}$",
+            "description": "BRL canônico com duas casas; máximo 9999999999999999.99."
+          },
+          "status": {
+            "$ref": "#/components/schemas/OrderStatus"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "currentStepPosition": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20,
+            "nullable": true
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Step"
+            },
+            "minItems": 1,
+            "maxItems": 20
+          },
+          "availableActions": {
+            "$ref": "#/components/schemas/Actions"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "notes": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 2000,
+            "nullable": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Item"
+            },
+            "minItems": 1,
+            "maxItems": 100
+          },
+          "ruleSnapshot": {
+            "$ref": "#/components/schemas/RuleSnapshot"
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HistoryEntry"
+            },
+            "minItems": 1,
+            "maxItems": 21
+          }
+        },
+        "required": [
+          "id",
+          "reference",
+          "project",
+          "supplier",
+          "requester",
+          "orderDate",
+          "itemCount",
+          "total",
+          "status",
+          "version",
+          "currentStepPosition",
+          "steps",
+          "availableActions",
+          "createdAt",
+          "notes",
+          "items",
+          "ruleSnapshot",
+          "history"
+        ]
+      },
+      "UserPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/User"
+            },
+            "maxItems": 100
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Page"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "ProjectPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Project"
+            },
+            "maxItems": 100
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Page"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "SupplierPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Supplier"
+            },
+            "maxItems": 100
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Page"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "ResponsibilityPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Responsibility"
+            },
+            "maxItems": 100
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Page"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "OrderSummaryPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderSummary"
+            },
+            "maxItems": 100
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Page"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ]
+      },
+      "ErrorCode": {
+        "type": "string",
+        "enum": [
+          "VALIDATION_ERROR",
+          "INVALID_OPERATOR_ROLE",
+          "RESPONSIBILITY_PROJECT_MISMATCH",
+          "RESPONSIBILITY_NOT_ACTIVE",
+          "INVALID_RULE_ID",
+          "RULE_RANGE_OVERLAP",
+          "RULE_CHAIN_DUPLICATE_OPERATOR",
+          "RULE_NOT_APPLICABLE",
+          "TOTAL_LIMIT_EXCEEDED",
+          "INVALID_CREDENTIALS",
+          "UNAUTHENTICATED",
+          "FORBIDDEN",
+          "CSRF_INVALID",
+          "NOT_CURRENT_OPERATOR",
+          "RESOURCE_NOT_FOUND",
+          "EMAIL_ALREADY_EXISTS",
+          "RESPONSIBILITY_ALREADY_ACTIVE",
+          "RESPONSIBILITY_IN_USE",
+          "RULES_REVISION_CONFLICT",
+          "ORDER_VERSION_CONFLICT",
+          "ORDER_ALREADY_COMPLETED",
+          "STEP_NOT_CURRENT",
+          "SESSION_ALREADY_AUTHENTICATED",
+          "PAYLOAD_TOO_LARGE",
+          "UNSUPPORTED_MEDIA_TYPE",
+          "LOGIN_RATE_LIMITED",
+          "INTERNAL_ERROR"
+        ]
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Revise os campos informados.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "VALIDATION_ERROR",
+                "message": "Revise os campos informados.",
+                "fields": [],
+                "details": {},
+                "requestId": "00000000-0000-4000-8000-000000000900"
+              }
+            }
+          }
+        },
+        "headers": {
+          "Cache-Control": {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "no-store"
+              ]
+            },
+            "description": "Não armazenar resposta em cache HTTP."
+          },
+          "X-Request-Id": {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Correlação gerada no servidor, também presente no corpo de erros."
+          }
+        }
+      },
+      "InternalError": {
+        "description": "Não foi possível concluir a operação. Tente novamente.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "INTERNAL_ERROR",
+                "message": "Não foi possível concluir a operação. Tente novamente.",
+                "fields": [],
+                "details": {},
+                "requestId": "00000000-0000-4000-8000-000000000900"
+              }
+            }
+          }
+        },
+        "headers": {
+          "Cache-Control": {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "no-store"
+              ]
+            },
+            "description": "Não armazenar resposta em cache HTTP."
+          },
+          "X-Request-Id": {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Correlação gerada no servidor, também presente no corpo de erros."
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Você não tem permissão para esta operação.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "FORBIDDEN",
+                "message": "Você não tem permissão para esta operação.",
+                "fields": [],
+                "details": {},
+                "requestId": "00000000-0000-4000-8000-000000000900"
+              }
+            }
+          }
+        },
+        "headers": {
+          "Cache-Control": {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "no-store"
+              ]
+            },
+            "description": "Não armazenar resposta em cache HTTP."
+          },
+          "X-Request-Id": {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Correlação gerada no servidor, também presente no corpo de erros."
+          }
+        }
+      },
+      "PayloadTooLarge": {
+        "description": "O corpo da requisição excede 1 MiB.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "PAYLOAD_TOO_LARGE",
+                "message": "O corpo da requisição excede 1 MiB.",
+                "fields": [],
+                "details": {},
+                "requestId": "00000000-0000-4000-8000-000000000900"
+              }
+            }
+          }
+        },
+        "headers": {
+          "Cache-Control": {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "no-store"
+              ]
+            },
+            "description": "Não armazenar resposta em cache HTTP."
+          },
+          "X-Request-Id": {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Correlação gerada no servidor, também presente no corpo de erros."
+          }
+        }
+      },
+      "UnsupportedMediaType": {
+        "description": "Envie o corpo como application/json.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "UNSUPPORTED_MEDIA_TYPE",
+                "message": "Envie o corpo como application/json.",
+                "fields": [],
+                "details": {},
+                "requestId": "00000000-0000-4000-8000-000000000900"
+              }
+            }
+          }
+        },
+        "headers": {
+          "Cache-Control": {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "no-store"
+              ]
+            },
+            "description": "Não armazenar resposta em cache HTTP."
+          },
+          "X-Request-Id": {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Correlação gerada no servidor, também presente no corpo de erros."
+          }
+        }
+      },
+      "Unauthenticated": {
+        "description": "Entre para continuar.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "UNAUTHENTICATED",
+                "message": "Entre para continuar.",
+                "fields": [],
+                "details": {},
+                "requestId": "00000000-0000-4000-8000-000000000900"
+              }
+            }
+          }
+        },
+        "headers": {
+          "Cache-Control": {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "no-store"
+              ]
+            },
+            "description": "Não armazenar resposta em cache HTTP."
+          },
+          "X-Request-Id": {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Correlação gerada no servidor, também presente no corpo de erros."
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Recurso não encontrado.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": {
+                "code": "RESOURCE_NOT_FOUND",
+                "message": "Recurso não encontrado.",
+                "fields": [],
+                "details": {},
+                "requestId": "00000000-0000-4000-8000-000000000900"
+              }
+            }
+          }
+        },
+        "headers": {
+          "Cache-Control": {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "no-store"
+              ]
+            },
+            "description": "Não armazenar resposta em cache HTTP."
+          },
+          "X-Request-Id": {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Correlação gerada no servidor, também presente no corpo de erros."
+          }
+        }
+      }
+    }
+  },
+  "x-response-policy": {
+    "cacheControl": "no-store",
+    "contentType": "application/json; charset=utf-8",
+    "unknownProperties": "reject",
+    "maxRequestBodyBytes": 1048576,
+    "integerQueryParsing": "strict",
+    "csrf": "same-origin + session-bound header token"
+  },
+  "x-validation-notes": [
+    "Campos desconhecidos são rejeitados em bodies e queries.",
+    "Normalizar textos com trim antes de validar; senha não recebe trim.",
+    "Decimais são strings sem expoente ou separadores de milhar.",
+    "Schema descreve estrutura; cobertura de faixas, referências, permissões, precisão financeira e concorrência exigem validação no servidor."
+  ]
+}
