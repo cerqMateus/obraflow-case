@@ -1,5 +1,6 @@
 import { Controller, Get, Inject, ServiceUnavailableException } from '@nestjs/common';
 import { DatabaseService } from './database/database.service';
+import { expectedMigrations } from './database/expected-migrations';
 
 @Controller()
 export class HealthController {
@@ -14,7 +15,12 @@ export class HealthController {
   @Get(['health/ready', 'api/technical-status'])
   async ready(): Promise<{ status: string }> {
     try {
-      await this.database.$queryRaw`SELECT 1`;
+      const migrations = await this.database.$queryRaw<{ migration_name: string }[]>`
+        SELECT migration_name FROM "_prisma_migrations"
+        WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL`;
+      if (!expectedMigrations.every((name) => migrations.some((row) => row.migration_name === name))) {
+        throw new Error('Migrations pending.');
+      }
       return { status: 'ok' };
     } catch {
       throw new ServiceUnavailableException('Serviço indisponível.');

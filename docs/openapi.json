@@ -3,7 +3,7 @@
   "info": {
     "title": "ObraFlow / Dokimos API",
     "version": "0.1.0",
-    "description": "Contrato inicial planejado; não representa endpoints implementados. Ler contrato-api.md para regras transacionais, sessão, normalização, exemplos e catálogo de erros. Roles exclusivas admin e operator; responsabilidades por obra e etapas atribuídas a operadores. Sessão PostgreSQL, validade absoluta de 8h, cookie HttpOnly e token CSRF. Valores e identificadores dos exemplos são fictícios."
+    "description": "Contrato inicial planejado; não representa endpoints implementados. Servido em /api/docs pela SPEC-003, com envio de requisições desabilitado. Ler contrato-api.md para regras transacionais, sessão, normalização, exemplos e catálogo de erros. Roles exclusivas admin e operator; responsabilidades por obra e etapas atribuídas a operadores. Sessão PostgreSQL, validade absoluta de 8h, cookie HttpOnly e token CSRF. Valores e identificadores dos exemplos são fictícios."
   },
   "servers": [
     {

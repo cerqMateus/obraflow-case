@@ -2,17 +2,25 @@
   "name": "obraflow",
   "private": true,
   "packageManager": "pnpm@10.20.0",
-  "engines": { "node": ">=24.18.0 <25", "pnpm": "10.20.0" },
+  "engines": {
+    "node": ">=24.18.0 <25",
+    "pnpm": "10.20.0"
+  },
   "scripts": {
+    "contract:check": "node scripts/contract-check.mjs",
+    "contract:test": "node --test scripts/contract-check.test.mjs",
     "dev": "corepack pnpm -r --parallel run dev",
     "lint": "corepack pnpm -r run lint",
     "typecheck": "corepack pnpm -r run typecheck",
     "build": "corepack pnpm -r run build"
   },
   "devDependencies": {
+    "@apidevtools/swagger-parser": "12.1.0",
     "@eslint/js": "10.0.1",
+    "ajv": "8.17.1",
+    "ajv-formats": "3.0.1",
     "eslint": "10.13.0",
-    "typescript-eslint": "8.72.0",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.0"
   }
 }

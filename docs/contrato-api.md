@@ -13,7 +13,7 @@ Este contrato define a comunicação entre frontend e backend. A visão geral de
 | Aspecto | Contrato |
 |---|---|
 | Prefixo | `/api/v1` |
-| Documentação interativa futura | `/api/docs`; nesta entrega há apenas o arquivo OpenAPI |
+| Documentação | `/api/docs` serve o OpenAPI planejado, com aviso e envio de requisições desabilitado; não comprova implementação das operações |
 | Origem no navegador | Frontend e API sob a mesma origem, com encaminhamento de `/api`; porta local será definida na infraestrutura |
 | Conteúdo | `application/json; charset=utf-8`; requisições com corpo exigem `application/json` |
 | Cache | Respostas da API com `Cache-Control: no-store`, incluindo sessão, token CSRF e erros |

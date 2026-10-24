@@ -15,6 +15,7 @@ services:
 
   backend:
     environment:
+      APP_ENV: test
       POSTGRES_DB: obraflow_test
       POSTGRES_USER: obraflow_test
       APP_ORIGIN: http://frontend

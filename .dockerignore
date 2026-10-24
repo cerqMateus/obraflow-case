@@ -10,6 +10,9 @@ backend/generated
 !.env.test.example
 assets
 docs
+!docs/
+docs/*
+!docs/openapi.json
 *.md
 **/test-results
 **/playwright-report

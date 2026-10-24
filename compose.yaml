@@ -45,6 +45,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Configure POSTGRES_PASSWORD}
       APP_ORIGIN: ${APP_ORIGIN:?Configure APP_ORIGIN}
       SESSION_SECRET: ${SESSION_SECRET:?Configure SESSION_SECRET}
+      APP_ENV: local
+      PORT: 3000
     depends_on:
       postgres:
         condition: service_healthy
