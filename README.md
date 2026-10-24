@@ -2,6 +2,74 @@
 
 # Desafio Full-stack — ObraFlow
 
+## Execução local — SPEC-001
+
+Este incremento implementa somente a infraestrutura: React mínimo, NestJS e PostgreSQL real. Login, entidades, migrations, seed e telas de produto ainda não estão implementados. O enunciado original permanece abaixo.
+
+Requisitos: Docker Engine/Desktop com containers Linux e Docker Compose **2.24.4 ou superior** (overlay usa `!override`). Não é necessário instalar Node, pnpm ou PostgreSQL no host. A primeira execução baixa imagens e pacotes pela internet.
+
+Na raiz do repositório, PowerShell:
+
+```powershell
+docker run --rm --mount "type=bind,source=$((Get-Location).Path),target=/workspace" -w /workspace node:24.18.1-bookworm-slim node scripts/init-env.mjs
+docker compose config --quiet
+docker compose up --build -d
+```
+
+Em Bash, a primeira linha usa `--mount "type=bind,source=$(pwd),target=/workspace"`; os demais argumentos e comandos são os mesmos. O script copia `.env.example` para `.env`, substitui os dois placeholders por valores criptograficamente aleatórios e recusa sobrescrever arquivo existente. Não publique `.env` nem o remova a cada reinício. `SESSION_SECRET` fica reservado para a sessão da SPEC-004; não há autenticação neste marco.
+
+Abra [ObraFlow local](http://localhost:8080). O link técnico consulta [backend e banco](http://localhost:8080/api/technical-status), que retorna `{"status":"ok"}` somente após um `SELECT 1` real. Esta rota temporária de infraestrutura preserva `/api` no proxy; não é operação de negócio e não altera o OpenAPI. `/health/live` e `/health/ready` ficam internos. Caminhos `/api` desconhecidos chegam ao Nest e retornam erro, sem receber o HTML da SPA. Rotas de negócio futuras continuam sob `/api/v1`.
+
+Somente `127.0.0.1:8080` é publicado. Backend (3000) e PostgreSQL (5432) ficam na rede Compose. Altere `HTTP_PORT` e `APP_ORIGIN` juntos no `.env` para usar outra porta. O backend aguarda o banco saudável e o frontend aguarda a prontidão real do backend.
+
+```powershell
+docker compose ps
+docker compose restart
+docker compose down
+docker compose up -d
+```
+
+`down` sem `--volumes` preserva o volume `obraflow_postgres-data` e `/var/lib/postgresql/data`. Não use `down --volumes` se precisa conservar o banco. A comprovação com registros de negócio pertence à SPEC-002; nenhuma tabela provisória é criada aqui.
+
+### Desenvolvimento
+
+```powershell
+docker compose -f compose.yaml -f compose.dev.yaml config --quiet
+docker compose -f compose.yaml -f compose.dev.yaml up --build -d
+```
+
+Também usa `http://localhost:8080` e `/api` na mesma origem. Vite encaminha a API sem reescrever prefixo, Host ou Origin. `frontend/src`, `frontend/index.html` e `backend/src` são montados para atualização automática; dependências Linux ficam na imagem, sem montar `node_modules` do Windows. Alterações em manifests, lockfile e configurações exigem novo build. Para retornar ao modo compilado, execute `docker compose up --build -d`.
+
+### Qualidade
+
+Os serviços do perfil `tools` contêm fontes e ferramentas, ausentes das imagens finais:
+
+```powershell
+docker compose --profile tools build backend-tools frontend-tools
+docker compose --profile tools run --rm backend-tools pnpm run lint
+docker compose --profile tools run --rm backend-tools pnpm run typecheck
+docker compose --profile tools run --rm backend-tools pnpm run build
+docker compose --profile tools run --rm frontend-tools pnpm run lint
+docker compose --profile tools run --rm frontend-tools pnpm run typecheck
+docker compose --profile tools run --rm frontend-tools pnpm run build
+```
+
+Desenvolvimento opcional no host: Node **24.18.1**, Corepack e pnpm **10.20.0** (`corepack pnpm install --frozen-lockfile`, depois `corepack pnpm lint`, `corepack pnpm typecheck`, `corepack pnpm build`). O backend precisa das variáveis do banco e de acesso à rede dele; o fluxo recomendado usa Docker. Não existem testes vazios: suites surgem nas specs que implementam comportamentos de domínio e interface. `e2e/` está reservado, sem pacote executável ainda.
+
+## Decisões técnicas
+
+- Workspace pnpm com um lockfile, versões exatas e TypeScript 5.9.3 estrito. Node 24.18.1 é a base comum do host opcional e das imagens; pnpm 10.20.0 é ativado pelo Corepack. React 19.2.0, Vite 8.0.10 e Nest 11.1.16 são versões fixadas compatíveis com esse runtime, sem depender da tag `latest`.
+- ESLint 10.13.0 e typescript-eslint 8.72.0 validam as duas aplicações. Nest é aplicação independente, sem modo especial de monorepo do CLI. O build do backend usa `tsc` com metadados de decorators.
+- PostgreSQL 17.6 em Debian, Nginx 1.28.0 Alpine e imagens multi-stage. O backend final executa como usuário `node`, com apenas dependências de produção e código compilado; o frontend final contém Nginx e assets públicos. `.env` fica fora do contexto de build; segredos entram apenas em runtime no backend/banco, nunca no frontend.
+- `decimal.js` 10.6.0 foi escolhida e fixada em ambas as aplicações para a futura política comum: strings decimais, `ROUND_HALF_UP` por item em duas casas, soma de itens arredondados e limites explícitos. Cálculos financeiros ainda não estão implementados. Prisma e o modelo de persistência entram na SPEC-002; `pg` 8.16.3 executa exclusivamente a sondagem de infraestrutura neste marco.
+- O backend mínimo ainda não oferece a camada HTTP de domínio da SPEC-003 nem autenticação da SPEC-004. A página técnica não é a identidade visual final; Tailwind, Manrope e componentes de produto serão integrados na etapa de frontend. Não há estilos de componente ou página nesta base.
+- Nginx preserva caminhos `/api`, Host e Origin e mantém fallback SPA separado. O limite inicial de corpo é 100 KiB, alinhado ao parser padrão do backend; limites e erros HTTP de domínio serão consolidados na SPEC-003.
+- Para produção faltam HTTPS, gestão externa de segredos, atualização contínua das imagens/dependências, backups, observabilidade e endurecimento operacional. Este Compose é uma base local, sem promessa de disponibilidade de produção.
+
+Evidências e pendências deste incremento: [registro da SPEC-001](docs/specs/SPEC-001-base-workspace-docker.md#registro-de-execução). As demais specs continuam planejadas.
+
+---
+
 Bem-vindo(a) ao nosso processo seletivo! Estamos buscando alguém com curiosidade técnica, autonomia e, acima de tudo, **visão de produto e criatividade** para transformar problemas reais em soluções.
 ## Contexto
 

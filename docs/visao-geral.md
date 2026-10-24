@@ -1,7 +1,7 @@
 # ObraFlow / Dokimos — Visão geral da solução
 
 Data: 24/10/2026  
-Status: planejamento inicial revisado para as roles Admin e Operador; funcionalidades e comandos ainda não implementados.  
+Status: domínio planejado para as roles Admin e Operador; infraestrutura mínima da SPEC-001 implementada e verificada localmente. Funcionalidades de negócio ainda não implementadas.
 Referência: [enunciado do desafio](../README.md).  
 Entrega informada no enunciado: 01/11/2026 às 23h59; o texto não explicita o fuso horário.
 

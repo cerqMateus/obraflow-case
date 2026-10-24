@@ -52,7 +52,7 @@ Interface em português brasileiro, com contexto, valores e próxima ação fác
 - [Contrato planejado](docs/contrato-api.md) e [OpenAPI](docs/openapi.json).
 - Quatro referências visuais fornecidas pelo usuário na conversa: interface, paleta, tipografia e diálogo. Os anexos estão em caminhos temporários; não são assets distribuídos pelo repositório.
 
-Ainda não há frontend, componentes, telas renderizadas ou testes visuais para extrair ou certificar um sistema implementado.
+Há uma superfície técnica mínima renderizada na SPEC-001, sem telas ou componentes de produto e sem certificação visual do sistema de design.
 
 ## Product Principles
 

@@ -1,0 +1,24 @@
+services:
+  backend:
+    build:
+      target: tools
+    working_dir: /workspace/backend
+    command: [sh, -c, 'pnpm run build && pnpm run dev']
+    environment:
+      NODE_ENV: development
+      TSC_WATCHFILE: DynamicPriorityPolling
+    volumes:
+      - ./backend/src:/workspace/backend/src:ro
+
+  frontend:
+    build:
+      target: tools
+    working_dir: /workspace/frontend
+    command: [pnpm, run, dev]
+    environment:
+      API_PROXY_TARGET: http://backend:3000
+    ports: !override
+      - '127.0.0.1:${HTTP_PORT:-8080}:8080'
+    volumes:
+      - ./frontend/src:/workspace/frontend/src:ro
+      - ./frontend/index.html:/workspace/frontend/index.html:ro
