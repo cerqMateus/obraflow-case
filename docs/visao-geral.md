@@ -778,11 +778,14 @@ Testes de concorrência devem usar conexões independentes contra o PostgreSQL, 
 
 ## 14. Etapas de implementação
 
-1. **Contrato e modelo:** detalhar autenticação local, DTOs, respostas, roles, responsabilidades, restrições e cenários de teste.
-2. **Base executável:** criar workspace, NestJS, React, PostgreSQL, ambiente local, migrations e seed.
-3. **Fluxo de domínio e API:** implementar identidade, autorização, gestão de obras e responsabilidades, faixas, criação atômica e decisões sequenciais.
-4. **Interface completa:** conectar login, administração e as três áreas principais, incluindo estados, responsividade e interação acessível.
-5. **Validação e entrega:** testes completos, instalação limpa, screenshots, README e preparação da PR.
+O roteiro executável está em [SPECS.md](../SPECS.md), com 15 specs, dependências, tarefas e evidências de aceite. A ordem foi definida para estabilizar o backend e depois concluir incrementos de API e frontend juntos:
+
+1. **Base backend — SPEC-001 a SPEC-004:** workspace/Docker, schema/migrations/testes isolados, base HTTP e autenticação/autorização reais. Frontend apenas mínimo até encerrar esse marco.
+2. **Administração integrada — SPEC-005 a SPEC-008:** login/estrutura visual e entregas verticais de obras, responsabilidades e configuração de alçadas.
+3. **Compras integradas — SPEC-009 a SPEC-011:** consulta, cadastro com N itens e decisões sequenciais, com frontend conectado a cada incremento.
+4. **Validação e entrega — SPEC-012 a SPEC-015:** disputas entre funcionalidades, revisão de experiência, seed completo, instalação limpa, screenshots, README e preparação da submissão.
+
+Permissões, estados e transações são implementados junto de cada funcionalidade. O marco de revisão final amplia a prova integrada; não posterga os requisitos de integridade.
 
 Reservar os dias finais para corrigir problemas e preparar documentação. Não tratar acabamento e instalação do zero como tarefas posteriores à entrega.
 
@@ -831,7 +834,7 @@ Antes de produção: endurecer autenticação e gestão de sessões, adicionar r
 Pontos ainda abertos, que não impedem o início da base:
 
 - Versões exatas da stack, requisitos locais e biblioteca decimal.
-- Paleta, tipografia e apresentação de detalhes em página ou painel.
+- Asset licenciado da Manrope e ajustes de medidas/cores semânticas após inspeção visual; paleta e tipografia já estão confirmadas em [DESIGN.md](../DESIGN.md), e as composições propostas estão em [design do frontend](design-frontend.md).
 - Biblioteca/store PostgreSQL de sessão e implementação de token CSRF compatíveis com o contrato já definido.
 - Mensagens finais de interface; códigos e formato dos erros já são definidos no contrato.
 

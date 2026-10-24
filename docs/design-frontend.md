@@ -195,7 +195,7 @@ Feedback temporário pode complementar uma confirmação, mas não ser a única 
 - Dinheiro em real brasileiro; quantidade aceita até três casas decimais e preço até duas, conforme contrato. Não truncar entrada inválida.
 - Cálculo local serve à estimativa: arredondar cada total de item antes da soma conforme contrato e substituir pelo total persistido após cadastro.
 - Valor ausente é “Não informado” quando aplicável; zero válido é apresentado como zero. Não usar travessão para situações semanticamente diferentes sem rótulo.
-- Datas civis preservam o dia informado. Instantes do histórico devem usar fuso de apresentação explícito; proposta inicial: America/Sao_Paulo, visível na área do histórico.
+- Datas civis preservam o dia informado. Instantes do histórico usam o fuso do navegador, identificado na área do histórico, conforme a visão geral. A proposta anterior de fixar America/Sao_Paulo foi substituída por essa regra na consolidação das specs.
 - Limites de conteúdo seguem o contrato: até 100 itens por pedido, 50 faixas por obra e 20 etapas por faixa. Listas e seletores não podem carregar apenas a primeira página e aparentar completude.
 - Verificar descrições e nomes longos, valores financeiros máximos e motivos extensos. Quebrar texto ou oferecer expansão; não ocultar informação crítica em tooltip.
 - Distinguir limite de coleção de erro de conexão; explicar quando “Adicionar” não está disponível por limite atingido.
@@ -214,7 +214,7 @@ Feedback temporário pode complementar uma confirmação, mas não ser a única 
 
 ## 9. Validação e próximos marcos
 
-Ordem sugerida: lista de pedidos → novo pedido → detalhe e decisão → regras → obras e responsáveis → login e revisão integrada. Login continua sendo requisito do fluxo funcional, independentemente da ordem de composição visual.
+Ordem funcional definida em [SPECS.md](../SPECS.md): base backend → login/estrutura → obras → responsabilidades → alçadas → consulta de pedidos → cadastro → decisões → revisão integrada. A sugestão visual anterior de começar pela lista não determina a ordem de implementação. Cada incremento já inclui estados, responsividade e acessibilidade aplicáveis; a revisão final verifica a experiência como um todo.
 
 Antes de considerar a interface pronta:
 
