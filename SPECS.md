@@ -1,6 +1,6 @@
 # ObraFlow / Dokimos — Specs de desenvolvimento
 
-Data: 24/10/2026. Versão do roteiro: 1.0. Status: **SPEC-001 verificada localmente; SPEC-002 a SPEC-015 planejadas**. Evidências no registro de execução de cada spec.
+Data: 24/10/2026. Versão do roteiro: 1.0. Status: **SPEC-001 e SPEC-002 verificadas localmente; SPEC-003 a SPEC-015 planejadas**. Evidências no registro de execução de cada spec.
 
 Este é o ponto de entrada do desenvolvimento orientado por especificações. Cada spec define um resultado verificável, suas dependências, tarefas, cenários de aceite e evidências de conclusão. Não equivale a um cronograma nem comprova uma implementação existente.
 
@@ -75,7 +75,7 @@ A sequência respeita o prazo do enunciado, mas não promete duração por spec.
 
 ## 4. Convenções executáveis a criar
 
-**Os comandos desta seção são contratos de implementação, não scripts existentes neste momento.** Cada spec responsável deve criá-los, executá-los e ajustar a documentação se houver motivo para um nome diferente. Nunca rodar cegamente um comando antes de conferir o arquivo correspondente.
+**Os comandos desta seção são contratos de implementação; sua disponibilidade é confirmada pelo registro da spec responsável.** Cada spec responsável deve criá-los, executá-los e ajustar a documentação se houver motivo para um nome diferente. Nunca rodar cegamente um comando antes de conferir o arquivo correspondente.
 
 Executar todos os blocos de comandos das specs na raiz do repositório, não dentro de `docs/specs/`. Os serviços de ferramentas definem o diretório interno de execução; não exigir instalação de pnpm no host para essas receitas.
 

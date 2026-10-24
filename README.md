@@ -2,9 +2,9 @@
 
 # Desafio Full-stack — ObraFlow
 
-## Execução local — SPEC-001
+## Execução local — SPEC-001 e SPEC-002
 
-Este incremento implementa somente a infraestrutura: React mínimo, NestJS e PostgreSQL real. Login, entidades, migrations, seed e telas de produto ainda não estão implementados. O enunciado original permanece abaixo.
+Este incremento implementa a infraestrutura, o schema completo do domínio, migrations versionadas, seed base e testes isolados com PostgreSQL real. React e NestJS continuam mínimos: login, endpoints de negócio e telas de produto ainda não estão implementados. O enunciado original permanece abaixo.
 
 Requisitos: Docker Engine/Desktop com containers Linux e Docker Compose **2.24.4 ou superior** (overlay usa `!override`). Não é necessário instalar Node, pnpm ou PostgreSQL no host. A primeira execução baixa imagens e pacotes pela internet.
 
@@ -20,7 +20,7 @@ Em Bash, a primeira linha usa `--mount "type=bind,source=$(pwd),target=/workspac
 
 Abra [ObraFlow local](http://localhost:8080). O link técnico consulta [backend e banco](http://localhost:8080/api/technical-status), que retorna `{"status":"ok"}` somente após um `SELECT 1` real. Esta rota temporária de infraestrutura preserva `/api` no proxy; não é operação de negócio e não altera o OpenAPI. `/health/live` e `/health/ready` ficam internos. Caminhos `/api` desconhecidos chegam ao Nest e retornam erro, sem receber o HTML da SPA. Rotas de negócio futuras continuam sob `/api/v1`.
 
-Somente `127.0.0.1:8080` é publicado. Backend (3000) e PostgreSQL (5432) ficam na rede Compose. Altere `HTTP_PORT` e `APP_ORIGIN` juntos no `.env` para usar outra porta. O backend aguarda o banco saudável e o frontend aguarda a prontidão real do backend.
+Somente `127.0.0.1:8080` é publicado. Backend (3000) e PostgreSQL (5432) ficam na rede Compose. Altere `HTTP_PORT` e `APP_ORIGIN` juntos no `.env` para usar outra porta. O serviço `migrate` aplica migrations após o banco saudável; o backend aguarda seu sucesso e o frontend aguarda a prontidão real do backend. Nginx acompanha mudanças do endereço do backend pelo DNS interno do Docker, inclusive após recriação do container. Falha de migration impede a inicialização do backend. Não há reset nem seed automático.
 
 ```powershell
 docker compose ps
@@ -29,7 +29,33 @@ docker compose down
 docker compose up -d
 ```
 
-`down` sem `--volumes` preserva o volume `obraflow_postgres-data` e `/var/lib/postgresql/data`. Não use `down --volumes` se precisa conservar o banco. A comprovação com registros de negócio pertence à SPEC-002; nenhuma tabela provisória é criada aqui.
+`down` sem `--volumes` preserva o volume `obraflow_postgres-data` e `/var/lib/postgresql/data`. Não use `down --volumes` se precisa conservar o banco. Migrations reaplicadas não alteram os dados existentes nem executam seed.
+
+### Migrations e contas fictícias
+
+```powershell
+docker compose --profile tools build backend-tools
+docker compose --profile tools run --rm backend-tools pnpm run db:generate
+docker compose --profile tools run --rm backend-tools pnpm run db:migrate
+docker compose --profile tools run --rm backend-tools pnpm run db:seed:base
+```
+
+O build já gera o cliente Prisma e `up` já aplica migrations; os comandos explícitos acima também estão disponíveis. `db:migrate` usa somente migrations versionadas, sem reset. O seed base cria quatro contas e dois fornecedores fictícios; não cria obras, vínculos, regras nem pedidos. Repetição preserva hashes e dados; divergência de cadastro causa erro e rollback. Não é um comando para restaurar contas modificadas.
+
+Contas locais de demonstração: `admin@demo.obraflow.test`, `amanda@demo.obraflow.test`, `joao@demo.obraflow.test`, `beatriz@demo.obraflow.test`. Senha fictícia comum: `ObraFlow-Demo-2026!`. Essas contas ainda não têm endpoint/tela de login; a autenticação será implementada na SPEC-004. Nunca reutilize essa senha em um ambiente real.
+
+### Banco exclusivo de testes
+
+```powershell
+docker run --rm --mount "type=bind,source=$((Get-Location).Path),target=/workspace" -w /workspace node:24.18.1-bookworm-slim node scripts/init-env.mjs --test
+docker compose -p obraflow-test --env-file .env.test -f compose.yaml -f compose.test.yaml config --quiet
+docker compose -p obraflow-test --env-file .env.test -f compose.yaml -f compose.test.yaml up --build -d
+docker compose -p obraflow-test --env-file .env.test -f compose.yaml -f compose.test.yaml --profile tools build backend-tools
+docker compose -p obraflow-test --env-file .env.test -f compose.yaml -f compose.test.yaml --profile tools run --rm backend-tools pnpm run test:unit
+docker compose -p obraflow-test --env-file .env.test -f compose.yaml -f compose.test.yaml --profile tools run --rm backend-tools pnpm run test:integration
+```
+
+O bootstrap recusa sobrescrever `.env.test`. O projeto usa banco `obraflow_test`, volume `obraflow-test_postgres-test-data`, rede própria, porta 18080 e origem interna `http://frontend`. Integração limpa fixtures **somente** depois de verificar configuração e destino SQL efetivo; uma URL de trabalho é recusada. Não execute integração/E2E simultaneamente no mesmo banco. Fixtures provam restrições, rollback e concorrência de persistência; não provam endpoints ou autorização ainda ausentes. Detalhes de modelo, transação, hash, store e guardas: [persistência](docs/persistencia.md).
 
 ### Desenvolvimento
 
@@ -54,19 +80,20 @@ docker compose --profile tools run --rm frontend-tools pnpm run typecheck
 docker compose --profile tools run --rm frontend-tools pnpm run build
 ```
 
-Desenvolvimento opcional no host: Node **24.18.1**, Corepack e pnpm **10.20.0** (`corepack pnpm install --frozen-lockfile`, depois `corepack pnpm lint`, `corepack pnpm typecheck`, `corepack pnpm build`). O backend precisa das variáveis do banco e de acesso à rede dele; o fluxo recomendado usa Docker. Não existem testes vazios: suites surgem nas specs que implementam comportamentos de domínio e interface. `e2e/` está reservado, sem pacote executável ainda.
+Desenvolvimento opcional no host: Node **24.18.1**, Corepack e pnpm **10.20.0** (`corepack pnpm install --frozen-lockfile`, `corepack pnpm --filter @obraflow/backend db:generate`, depois `corepack pnpm lint`, `corepack pnpm typecheck`, `corepack pnpm build`). O backend precisa das variáveis do banco e de acesso à rede dele; o fluxo recomendado usa Docker. `test:unit` e `test:integration` existem no backend; a integração exige o ambiente isolado acima. `e2e/` está reservado, sem pacote executável ainda.
 
 ## Decisões técnicas
 
 - Workspace pnpm com um lockfile, versões exatas e TypeScript 5.9.3 estrito. Node 24.18.1 é a base comum do host opcional e das imagens; pnpm 10.20.0 é ativado pelo Corepack. React 19.2.0, Vite 8.0.10 e Nest 11.1.16 são versões fixadas compatíveis com esse runtime, sem depender da tag `latest`.
 - ESLint 10.13.0 e typescript-eslint 8.72.0 validam as duas aplicações. Nest é aplicação independente, sem modo especial de monorepo do CLI. O build do backend usa `tsc` com metadados de decorators.
 - PostgreSQL 17.6 em Debian, Nginx 1.28.0 Alpine e imagens multi-stage. O backend final executa como usuário `node`, com apenas dependências de produção e código compilado; o frontend final contém Nginx e assets públicos. `.env` fica fora do contexto de build; segredos entram apenas em runtime no backend/banco, nunca no frontend.
-- `decimal.js` 10.6.0 foi escolhida e fixada em ambas as aplicações para a futura política comum: strings decimais, `ROUND_HALF_UP` por item em duas casas, soma de itens arredondados e limites explícitos. Cálculos financeiros ainda não estão implementados. Prisma e o modelo de persistência entram na SPEC-002; `pg` 8.16.3 executa exclusivamente a sondagem de infraestrutura neste marco.
+- `decimal.js` 10.6.0 foi escolhida e fixada em ambas as aplicações para a futura política comum: strings decimais, `ROUND_HALF_UP` por item em duas casas, soma de itens arredondados e limites explícitos. Cálculos financeiros ainda não estão implementados. Prisma/client 6.19.3 implementam o modelo e migrations, incluindo SQL para checks, índice parcial e sequência. Essa versão mantém a integração CommonJS existente; o cliente é gerado explicitamente para o sistema da imagem. `pg` 8.16.3 é usado pelo harness de testes e está disponível para o futuro store.
+- Senhas usam scrypt nativo assíncrono (N=131072, r=8, p=1), salt aleatório de 16 bytes por conta e comparação em tempo constante. Store escolhido: connect-pg-simple; tabela técnica criada por migration. Middleware, cookie, expiração absoluta, CSRF e origem serão integrados na SPEC-004, sem criação automática de schema. [Decisões de persistência](docs/persistencia.md).
 - O backend mínimo ainda não oferece a camada HTTP de domínio da SPEC-003 nem autenticação da SPEC-004. A página técnica não é a identidade visual final; Tailwind, Manrope e componentes de produto serão integrados na etapa de frontend. Não há estilos de componente ou página nesta base.
 - Nginx preserva caminhos `/api`, Host e Origin e mantém fallback SPA separado. O limite inicial de corpo é 100 KiB, alinhado ao parser padrão do backend; limites e erros HTTP de domínio serão consolidados na SPEC-003.
 - Para produção faltam HTTPS, gestão externa de segredos, atualização contínua das imagens/dependências, backups, observabilidade e endurecimento operacional. Este Compose é uma base local, sem promessa de disponibilidade de produção.
 
-Evidências e pendências deste incremento: [registro da SPEC-001](docs/specs/SPEC-001-base-workspace-docker.md#registro-de-execução). As demais specs continuam planejadas.
+Evidências e pendências: [registro da SPEC-001](docs/specs/SPEC-001-base-workspace-docker.md#registro-de-execução) e [registro da SPEC-002](docs/specs/SPEC-002-schema-migrations-testes.md#registro-de-execução). As specs posteriores continuam planejadas.
 
 ---
 

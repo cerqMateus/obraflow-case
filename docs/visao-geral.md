@@ -831,11 +831,11 @@ Reservar os dias finais para corrigir problemas e preparar documentação. Não 
 
 Antes de produção: endurecer autenticação e gestão de sessões, adicionar recuperação de acesso e permissões por empresa, revisar a política de aprovação própria conforme o negócio, exposição de dados, trilha de auditoria ampliada, gestão de segredos, TLS, backups com restauração validada, observabilidade, limites de requisições e estratégia de deploy/migrations. Avaliar idempotência do cadastro, retenção de dados e substituição de operadores em etapas sem reescrever o passado.
 
-Pontos ainda abertos, que não impedem o início da base:
+Estado dos pontos técnicos definidos e ainda pendentes:
 
-- Versões exatas da stack, requisitos locais e biblioteca decimal.
+- Versões exatas, requisitos e biblioteca decimal estão definidos no README; persistência, hash e store estão registrados em [persistência](persistencia.md).
 - Asset licenciado da Manrope e ajustes de medidas/cores semânticas após inspeção visual; paleta e tipografia já estão confirmadas em [DESIGN.md](../DESIGN.md), e as composições propostas estão em [design do frontend](design-frontend.md).
-- Biblioteca/store PostgreSQL de sessão e implementação de token CSRF compatíveis com o contrato já definido.
+- Store PostgreSQL escolhido: connect-pg-simple, com tabela criada por migration na SPEC-002; integração de sessão e token CSRF continua prevista para a SPEC-004, conforme o contrato.
 - Mensagens finais de interface; códigos e formato dos erros já são definidos no contrato.
 
 Não adicionar funcionalidades além do escopo apenas para aparentar escalabilidade. Evoluções devem responder a uma necessidade concreta e manter o fluxo principal demonstrável e explicável na entrevista.

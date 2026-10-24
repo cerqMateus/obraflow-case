@@ -1,9 +1,9 @@
 import { Controller, Get, Inject, ServiceUnavailableException } from '@nestjs/common';
-import { DatabaseProbe } from './database-probe';
+import { DatabaseService } from './database/database.service';
 
 @Controller()
 export class HealthController {
-  constructor(@Inject(DatabaseProbe) private readonly database: DatabaseProbe) {}
+  constructor(@Inject(DatabaseService) private readonly database: DatabaseService) {}
 
   @Get('health/live')
   live(): { status: string } {
@@ -14,7 +14,7 @@ export class HealthController {
   @Get(['health/ready', 'api/technical-status'])
   async ready(): Promise<{ status: string }> {
     try {
-      await this.database.check();
+      await this.database.$queryRaw`SELECT 1`;
       return { status: 'ok' };
     } catch {
       throw new ServiceUnavailableException('Serviço indisponível.');

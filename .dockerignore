@@ -1,6 +1,8 @@
 .git
 **/node_modules
 **/dist
+backend/src/generated
+backend/generated
 **/coverage
 .env
 .env.*

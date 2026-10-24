@@ -1,0 +1,36 @@
+name: obraflow-test
+
+services:
+  postgres:
+    environment:
+      POSTGRES_DB: obraflow_test
+      POSTGRES_USER: obraflow_test
+    volumes: !override
+      - postgres-test-data:/var/lib/postgresql/data
+
+  migrate:
+    environment:
+      POSTGRES_DB: obraflow_test
+      POSTGRES_USER: obraflow_test
+
+  backend:
+    environment:
+      POSTGRES_DB: obraflow_test
+      POSTGRES_USER: obraflow_test
+      APP_ORIGIN: http://frontend
+
+  frontend:
+    ports: !override
+      - '127.0.0.1:18080:80'
+
+  backend-tools:
+    environment:
+      POSTGRES_DB: obraflow_test
+      POSTGRES_USER: obraflow_test
+      NODE_ENV: test
+      COMPOSE_PROJECT_NAME: obraflow-test
+      DATABASE_URL: postgresql://obraflow_test:${POSTGRES_PASSWORD:?Configure test password}@postgres:5432/obraflow_test
+      TEST_DATABASE_URL: postgresql://obraflow_test:${POSTGRES_PASSWORD:?Configure test password}@postgres:5432/obraflow_test
+
+volumes:
+  postgres-test-data:
