@@ -8,5 +8,6 @@ coverage/
 *.tsbuildinfo
 playwright-report/
 test-results/
+e2e/evidence/
 backend/src/generated/
 backend/generated/

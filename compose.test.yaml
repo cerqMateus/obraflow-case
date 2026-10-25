@@ -1,6 +1,22 @@
 name: obraflow-test
 
 services:
+  e2e:
+    profiles: [tools]
+    build:
+      context: .
+      dockerfile: e2e/Dockerfile
+      target: tools
+    environment:
+      COMPOSE_PROJECT_NAME: obraflow-test
+      E2E_BASE_URL: http://frontend
+    depends_on:
+      frontend:
+        condition: service_started
+    volumes:
+      - ./e2e/evidence:/workspace/e2e/evidence
+    networks: [internal]
+
   postgres:
     environment:
       POSTGRES_DB: obraflow_test

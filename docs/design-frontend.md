@@ -1,6 +1,6 @@
 # ObraFlow / Dokimos — Design do frontend
 
-Data: 24/10/2026. Status: especificação inicial, sem interface implementada ou validação visual executada.
+Data: 24/10/2026. Status: login e shell implementados na SPEC-005; telas de negócio especificadas para marcos futuros. Sem validação visual executada.
 
 Este documento aplica a identidade de [DESIGN.md](../DESIGN.md) às telas previstas. O contexto está em [PRODUCT.md](../PRODUCT.md); domínio e permissões seguem a [visão geral](visao-geral.md); dados, limites e erros seguem o [contrato da API](contrato-api.md). As recomendações abaixo não alteram esses contratos.
 
@@ -8,7 +8,7 @@ Este documento aplica a identidade de [DESIGN.md](../DESIGN.md) às telas previs
 
 **Confirmado pelo usuário:** proximidade com as quatro referências Syntro, incluindo a mesma paleta e a Manrope.
 
-**Proposta para implementação:** navegação, medidas, composição, componentes e tratamentos descritos neste documento. Validar no primeiro protótipo usando dados fictícios identificados como demonstração.
+**Implementado na SPEC-005:** login, consulta de sessão, feedback de falha e estrutura responsiva privada. Tokens reais e inventário extraído estão em DESIGN.md e `.impeccable/design.json`. As seções de negócio abaixo descrevem contratos futuros, não telas existentes. Não foi realizada inspeção visual desktop/móvel nem aceitação integrada com API e PostgreSQL reais.
 
 Modo das superfícies: **Operate**. O usuário precisa solicitar, conferir, decidir ou configurar. A primeira área visível deve esclarecer contexto, situação e ação disponível, sem uma abertura promocional.
 
@@ -31,41 +31,43 @@ As referências orientam linguagem e acabamento; não justificam adicionar dashb
 - Não oferecer atalhos administrativos a Operador. Visibilidade da navegação complementa autorização no servidor.
 - Não exibir sino de notificações, busca global ou seletor de tema sem funcionalidade prevista.
 
-Os nomes acima são rótulos de navegação; URLs do frontend não estão fixadas por esta documentação.
+Rotas fixadas na SPEC-005: `/login`, `/pedidos`, `/pedidos/novo`, `/pedidos/:orderId`, `/admin/obras`, `/admin/obras/:projectId` e `/admin/alcadas`. Somente login e shell estão implementados neste marco. Rotas futuras exibem indisponibilidade explícita; não há botão Novo pedido ou links de gestão anunciados como funcionais. Acesso direto administrativo por Operador e criação por Admin exibem acesso restrito. Qualquer deep link privado sem sessão conduz ao login.
 
-## 3. Medidas iniciais para o protótipo
+## 3. Medidas e tokens da SPEC-005
 
-Valores recomendados, ainda não tokens extraídos de componentes:
+Valores extraídos de `frontend/src/app/styles.css` e dos componentes; DESIGN.md concentra os tokens normativos. Não são medidas visuais aferidas no navegador.
 
-| Elemento | Ponto de partida |
+| Elemento | Implementação atual |
 |---|---|
-| Espaçamento | Escala de 4, 8, 12, 16, 24, 32 e 48 px |
-| Sidebar desktop | 224 px |
-| Margens de conteúdo | 32 px desktop; 24 px intermediário; 16 px celular |
-| Título de página | 28 px / 36 px, peso 600 |
-| Título de seção | 18 px / 26 px, peso 600 |
-| Corpo e campos | 16 px / 24 px, peso 400 |
-| Labels e tabelas | 14 px / 20 px, peso 500 ou 400 conforme papel |
-| Metadados | 12 px / 18 px; não usar para informação essencial |
-| Total em destaque | 32 px / 40 px, peso 600 |
-| Campos e botões | Altura mínima de 44 px |
-| Área de toque | Meta de 44 × 44 px, incluindo ações por ícone |
-| Cantos | Painéis 24 px; campos 10 px; diálogos 20 px; cápsulas apenas onde apropriado |
-| Movimento | 120–180 ms para estados; até 220 ms para abertura; reduzir conforme preferência do sistema |
+| Fonte | Manrope Variable local por Fontsource; licença SIL OFL distribuída |
+| Sidebar desktop | 224 px a partir de 768 px |
+| Conteúdo privado | Margem 16 px; 32 px a partir de 640 px; 48 px a partir de 1024 px |
+| Login | Duas colunas a partir de 1024 px; formulário até 384 px |
+| Título principal | 30/36 px, peso 600 |
+| Mensagem ampla do login | 48/60 px, peso 600 |
+| Corpo e campos | 16/24 px; textos de apoio podem usar entrelinha ampliada |
+| Labels e botões | 14/20 px, peso 600 |
+| Metadados | 12/16 px |
+| Controles | Botões com mínimo 44 px; inputs 48 px; visibilidade da senha 44 × 44 px |
+| Cantos | Campos e navegação 8 px; controle da senha 6 px; coluna do login 24 px; botões cápsula |
+| Profundidade | Superfícies planas e contornos; sem sombra de superfície |
+| Movimento | Transição de cor nos botões, removida com movimento reduzido |
 
-Referências de adaptação: abaixo de 768 px, uma coluna e navegação recolhida; de 768 a 1199 px, layout intermediário; a partir de 1200 px, composição ampla. A largura necessária do conteúdo prevalece sobre um breakpoint arbitrário.
+A navegação móvel expande no fluxo, sem overlay. Seguir Pedidos recolhe a navegação e leva o foco ao conteúdo. O controle de senha oferece área de toque de 44 × 44 px; a inspeção real de acessibilidade continua pendente. Não há diálogo, drawer, tabela ou cadeia implementados.
+
+Cores de marca, ação, foco e erro já estão definidas; sucesso e pendência são reservas sem consumidores. Cálculos sRGB dos pares estão em DESIGN.md; não equivalem a inspeção visual nem certificação de contraste em todos os estados.
 
 ## 4. Telas e visualizações
 
-### 4.1 Login
+### 4.1 Login — implementado na SPEC-005
 
-Formulário compacto em superfície Paper sobre Surface. Desktop pode usar uma região lateral grafite com identificação do serviço; celular prioriza o formulário. Sem fotografias, métricas ou promessa comercial inventada.
+Formulário compacto em superfície Paper sobre Surface. Desktop usa região lateral grafite com identificação do serviço; celular conserva a identificação e prioriza o formulário. Sem fotografias, métricas ou promessa comercial inventada.
 
 Conteúdo: ObraFlow, identificação discreta de Dokimos, e-mail, senha com controle acessível de visibilidade e “Entrar”. Labels persistentes; permitir colar senha e usar gerenciador de credenciais. Não incluir “Criar conta”, “Esqueci minha senha” ou “Lembrar-me” nesta versão.
 
 Durante envio, anunciar progresso e impedir envio duplicado. Falha de credencial usa mensagem geral, sem revelar existência de conta; indisponibilidade oferece tentativa novamente. Após autenticação, exibir nome e role reais da sessão.
 
-### 4.2 Pedidos e aprovações — primeira superfície
+### 4.2 Pedidos e aprovações — contrato futuro
 
 **Tarefa:** encontrar um pedido e identificar se há decisão disponível. **Primeiro viewport:** título, ação de criação quando permitida, filtros e início da lista. **Assinatura:** situação acompanhada da etapa atual, nunca apenas um badge.
 
@@ -150,9 +152,9 @@ Dentro da obra selecionada, mostrar operadores vinculados e estado do vínculo. 
 
 “Revogar responsabilidade” abre confirmação com pessoa e obra. Se houver impedimentos, manter vínculo e mostrar contagens e referências devolvidas pelo servidor. Quando a relação estiver truncada, comunicar que existem outros impedimentos. Não sugerir revogação parcial ou substituição em pedidos enviados.
 
-## 5. Componentes previstos
+## 5. Componentes implementados e previstos
 
-Inventário para implementação, não biblioteca existente:
+Implementados: Button (principal, contorno e ghost), Input, formulário de login, estrutura de navegação e estados de sessão/indisponibilidade. O catálogo `.impeccable/design.json` traduz os primitivos existentes para consulta isolada; não é código de produção nem prova visual. Não há variante destrutiva, tabela, badge, diálogo ou cadeia implementados. O inventário abaixo orienta os próximos marcos:
 
 | Componente | Contrato visual e de interação |
 |---|---|
@@ -218,7 +220,7 @@ Ordem funcional definida em [SPECS.md](../SPECS.md): base backend → login/estr
 
 Antes de considerar a interface pronta:
 
-- [ ] Registrar tokens implementados e gerar o catálogo de componentes a partir do código.
+- [x] Registrar tokens implementados e gerar o catálogo de componentes a partir do código na SPEC-005.
 - [ ] Validar paleta em uso, especialmente contraste de botões vermelhão e distinção de rejeição.
 - [ ] Inspecionar desktop amplo, largura intermediária e celular em uma rodada conjunta.
 - [ ] Exercitar teclado, foco, zoom e movimento reduzido.
@@ -228,6 +230,8 @@ Antes de considerar a interface pronta:
 - [ ] Confirmar que edição local, estimativa e resposta persistida estão distinguíveis.
 - [ ] Validar fluxos e permissões contra a API real; mock visual não comprova autorização.
 
-**Em aberto:** asset e licença da fonte; símbolo próprio da marca; cores auxiliares de estados e foco; contraste final; medidas efetivas e URLs do frontend. Nenhum desses itens autoriza ampliar o escopo funcional.
+**Em aberto:** símbolo próprio da marca; revisão visual e de contraste em todos os estados; teclado, zoom e reflow reais; aceitação integrada de login/logout e permissões com API e banco reais; implementação dos próximos marcos de negócio. A fonte e sua licença, os tokens de foco/erro e as medidas atuais já estão incorporados.
 
-Esta entrega é documental. Não foram criados componentes, executados testes de frontend ou verificados layouts no navegador. Após a primeira implementação, executar a documentação em modo de extração para atualizar DESIGN.md com tokens reais e gerar o catálogo `.impeccable/design.json`.
+A documentação da SPEC-005 foi extraída do código. Na execução da SPEC-005 passaram lint, tipos, build de produção e 11 testes unitários/de componentes em 4 arquivos, incluindo regressão de foco na navegação móvel para a mesma rota. O código E2E passou por lint e tipos, sem execução de navegador. Essas evidências não substituem a inspeção visual nem o fluxo real integrado. A construção de novas imagens Docker e a rodada visual desktop/móvel foram adiadas pelo usuário devido à pressão de espaço em disco. Nenhuma captura de tela ou certificação visual é entregue por esta atualização.
+
+As rampas tonais do sidecar são sintetizadas apenas para prévia de paleta no catálogo; não constituem tokens implementados. Os exemplos HTML/CSS são isolados e não executam autenticação ou navegação da aplicação.

@@ -1,6 +1,6 @@
 # ObraFlow / Dokimos — Specs de desenvolvimento
 
-Data: 24/10/2026. Versão do roteiro: 1.0. Status: **SPEC-001 a SPEC-004 verificadas localmente (M1 encerrado); SPEC-005 a SPEC-015 planejadas**. Evidências no registro de execução de cada spec.
+Data: 24/10/2026. Versão do roteiro: 1.0. Status: **SPEC-001 a SPEC-004 verificadas localmente (M1 encerrado); SPEC-005 em execução (frontend implementado; E2E/visual adiados); SPEC-006 a SPEC-015 planejadas**. Evidências no registro de execução de cada spec.
 
 Este é o ponto de entrada do desenvolvimento orientado por especificações. Cada spec define um resultado verificável, suas dependências, tarefas, cenários de aceite e evidências de conclusão. Não equivale a um cronograma nem comprova uma implementação existente.
 

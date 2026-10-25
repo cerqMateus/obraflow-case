@@ -6,6 +6,7 @@ WORKDIR /workspace
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc ./
 COPY backend/package.json backend/package.json
 COPY frontend/package.json frontend/package.json
+COPY e2e/package.json e2e/package.json
 RUN pnpm install --frozen-lockfile
 COPY tsconfig.base.json eslint.config.mjs ./
 COPY frontend frontend

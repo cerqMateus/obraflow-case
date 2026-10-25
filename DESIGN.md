@@ -1,9 +1,91 @@
 ---
 name: ObraFlow / Dokimos
 description: Interface operacional clara, com superfícies quentes, Manrope e acento vermelhão.
+colors:
+  background: "#F7F5F3"
+  foreground: "#16181D"
+  muted: "#F1EFEC"
+  muted-foreground: "#5B636D"
+  brand: "#EE4B34"
+  brand-deep: "#D8402A"
+  primary: "#B83120"
+  primary-hover: "#9F291B"
+  primary-foreground: "#FFFFFF"
+  border: "#D8D2CB"
+  input: "#827970"
+  ring: "#245B86"
+  destructive: "#9C2452"
+typography:
+  display:
+    fontFamily: "Manrope Variable, system-ui, sans-serif"
+    fontSize: "48px"
+    fontWeight: 600
+    lineHeight: 1.25
+    letterSpacing: "-0.025em"
+  title:
+    fontFamily: "Manrope Variable, system-ui, sans-serif"
+    fontSize: "30px"
+    fontWeight: 600
+    lineHeight: 1.2
+    letterSpacing: "-0.025em"
+  body:
+    fontFamily: "Manrope Variable, system-ui, sans-serif"
+    fontSize: "16px"
+    fontWeight: 400
+    lineHeight: 1.5
+  label:
+    fontFamily: "Manrope Variable, system-ui, sans-serif"
+    fontSize: "14px"
+    fontWeight: 600
+    lineHeight: 1.428571
+  metadata:
+    fontFamily: "Manrope Variable, system-ui, sans-serif"
+    fontSize: "12px"
+    fontWeight: 400
+    lineHeight: 1.333333
+rounded:
+  md: "6px"
+  lg: "8px"
+  3xl: "24px"
+  full: "9999px"
+spacing:
+  2: "8px"
+  3: "12px"
+  4: "16px"
+  5: "20px"
+  6: "24px"
+  8: "32px"
+  12: "48px"
+components:
+  button-primary:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.primary-foreground}"
+    rounded: "{rounded.full}"
+    typography: "{typography.label}"
+    padding: "0 20px"
+  button-primary-hover:
+    backgroundColor: "{colors.primary-hover}"
+  button-outline:
+    backgroundColor: "{colors.background}"
+    textColor: "{colors.foreground}"
+    rounded: "{rounded.full}"
+    padding: "0 20px"
+  button-ghost:
+    textColor: "{colors.foreground}"
+    rounded: "{rounded.full}"
+    padding: "0 20px"
+  input:
+    backgroundColor: "{colors.background}"
+    textColor: "{colors.foreground}"
+    rounded: "{rounded.lg}"
+    height: "48px"
+    padding: "0 12px"
+  navigation:
+    backgroundColor: "{colors.muted}"
+    textColor: "{colors.foreground}"
+    rounded: "{rounded.lg}"
+    padding: "0 12px"
 ---
-
-<!-- SEED: established with the user before implementation; re-run $impeccable document once there's code to capture the actual tokens and components. -->
 
 # Design System: ObraFlow / Dokimos
 
@@ -11,95 +93,112 @@ description: Interface operacional clara, com superfícies quentes, Manrope e ac
 
 **Creative North Star: "Clareza para decidir"**
 
-Direção inicial baseada nas referências Syntro fornecidas pelo usuário e na escolha explícita de manter a paleta e a tipografia. O ObraFlow combina superfícies claras e quentes, texto grafite, curvas suaves e acentos vermelhão. Sua personalidade é sóbria, precisa e próxima.
+O ObraFlow combina superfícies claras e quentes, texto grafite, curvas suaves e acentos vermelhão. Sua personalidade é sóbria, precisa e próxima. A identidade confirmada pelo usuário preserva a paleta e a Manrope das referências Syntro, sem reproduzir sua marca, textos ou métricas.
 
-O espaço organiza o trabalho; a informação operacional fornece a densidade. Valores, situação e responsável pela próxima etapa têm prioridade. Elementos decorativos não competem com a decisão. A identidade é expressa por proporção, tipografia e uso seletivo de cor.
+O espaço organiza o trabalho; a informação operacional fornece a densidade. Valores, situação e responsável pela próxima etapa têm prioridade nas futuras telas de negócio. A SPEC-005 implementa login, sessão e estrutura de navegação; não implementa essas telas. Este registro foi extraído do código, sem inspeção visual no navegador.
 
 **Key Characteristics:**
 
 - Base neutra clara com contraste tipográfico firme.
-- Manrope em títulos, valores, tabelas e formulários.
-- Vermelhão concentrado em ações e navegação ativa.
-- Painéis suaves com interiores organizados por alinhamento.
-- Cadeia sequencial de aprovação como padrão visual recorrente.
-
-Status: especificação anterior à implementação. A família e as seis cores abaixo estão confirmadas pela referência. Composições e comportamentos detalhados em [design do frontend](docs/design-frontend.md) são propostas de aplicação; dimensões, cores semânticas auxiliares e tokens definitivos dependem do primeiro protótipo.
+- Manrope local em títulos, textos e formulários.
+- Vermelhão de identidade e derivação escura para ações com texto branco.
+- Superfícies planas, limites discretos e espaço para organizar conteúdo.
+- Estados e indisponibilidade comunicados com texto explícito.
 
 ## Colors
 
+A paleta combina vermelhão quente, grafite e neutros de papel. O frontmatter registra os valores efetivamente consumidos; a fonte de implementação é `frontend/src/app/styles.css`.
+
 ### Primary
 
-| Cor da referência | Valor | Aplicação |
-|---|---|---|
-| Vermilion | `#EE4B34` | Marca, destaque de ação e navegação ativa |
-| Deep Vermilion | `#D8402A` | Variação de interação; não presumir contraste suficiente com texto claro |
+- **Vermelhão de marca** (`brand`): ponto na identificação sobre grafite no login. `brand-deep` preserva a variação confirmada da identidade, ainda sem consumidor.
+- **Vermelhão operacional** (`primary`): botão principal e ponto da marca no shell claro. Sua derivação mais escura permite texto branco; `primary-hover` diferencia a interação.
+- **Azul de foco** (`ring`): contorno e anel de foco de controles.
+- **Framboesa de erro** (`destructive`): mensagens e bordas inválidas; não confunde erro com a marca.
 
-**Regra da ação dominante.** Cada contexto de tarefa apresenta uma ação principal. Um formulário dentro de diálogo tem seu próprio contexto; o fundo fica inerte enquanto o diálogo estiver aberto.
-
-Vermelhão identifica a marca e a ação, não reprovação. Erro e rejeição precisam de uma família semântica distinguível, texto e ícone. A escolha dessa família e das cores de sucesso, pendência e foco permanece em aberto até a validação do protótipo.
+**The Cor com significado Rule.** Estado nunca depende apenas da cor; use texto e semântica acessível. Vermelhão de marca não representa rejeição.
 
 ### Neutral
 
-| Cor da referência | Valor | Aplicação |
-|---|---|---|
-| Graphite | `#16181D` | Texto principal, números e regiões de alto contraste |
-| Slate | `#5B636D` | Texto secundário e metadados |
-| Paper | `#F7F5F3` | Superfícies de conteúdo |
-| Surface | `#F1EFEC` | Fundo geral e áreas de suporte |
+- **Graphite** (`foreground`): texto principal e painel de identidade do login.
+- **Slate** (`muted-foreground`): texto secundário, labels de suporte e metadados.
+- **Paper** (`background`): controles, navegação e superfície clara de conteúdo.
+- **Surface** (`muted`): fundo geral, navegação destacada e alertas de formulário.
+- **Contorno quente** (`border`): separadores discretos, sem substituir limites interativos.
+- **Limite de campo** (`input`): borda mais firme de campos.
+- **Branco de ação** (`primary-foreground`): texto sobre o vermelhão operacional.
 
-**Regra da cor com significado.** Estado nunca depende apenas da cor. Nomear a situação, distinguir etapa atual de etapa futura e explicitar impedimentos.
+O CSS também reserva `success` e `pending`, sem consumidores na SPEC-005. Não há badges ou estados de aprovação implementados a extrair.
 
-Na implementação, verificar cada par real de primeiro plano e fundo: meta mínima de 4,5:1 para texto comum e 3:1 para texto grande e elementos gráficos essenciais. Não presumir que texto branco sobre o vermelhão da referência atende ao requisito. Se necessário, usar texto grafite, um fundo operacional derivado mais escuro ou outro tratamento de contraste, documentando a derivação sem substituir as cores da marca.
+Cálculo sRGB dos pares definidos: Graphite/Paper 16,33:1; Slate/Paper 5,60:1; Slate/Surface 5,30:1; branco/ação 6,00:1; branco/hover 7,48:1; foco/Paper 6,62:1; erro/Surface 6,56:1; limite de campo/Paper 3,93:1; marca/Graphite 4,81:1. São cálculos dos tokens, não prova visual, nem auditoria completa de estados, opacidade ou conformidade.
 
 ## Typography
 
-**Display Font:** Manrope, com fallback `system-ui, sans-serif`.
-**Body Font:** Manrope, com o mesmo fallback.
+**Display Font:** Manrope Variable, com fallback `system-ui, sans-serif`.
+**Body Font:** a mesma família.
 
-Títulos e valores usam semibold; corpo usa regular; labels e ações usam medium. Pesos light e extra bold presentes na referência não precisam aparecer na interface operacional.
+**Character:** títulos firmes e leitura próxima, com regular no corpo e semibold em títulos, labels e ações. A fonte é empacotada localmente por Fontsource; licença SIL OFL preservada em `frontend/public/fonts/Manrope-OFL.txt` e distribuída no build.
 
-Hierarquia: título de página, título de seção, corpo, label e metadado. Valores totais podem ter escala maior, sem competir com a identificação da tarefa. Usar números tabulares em comparações financeiras, quando suportados pela fonte. Evitar texto operacional em caixa alta e espaçamento artificial entre letras.
+### Hierarchy
 
-A escala inicial recomendada está no documento de telas; os tamanhos efetivamente implementados serão registrados como tokens após o protótipo. Preferir fonte distribuída localmente, com licença preservada, para manter a execução independente de serviços externos. O arquivo de fonte ainda precisa ser incorporado.
+- **Display:** mensagem de identidade do login, apenas na composição ampla.
+- **Title:** título do login e título principal da área privada.
+- **Body:** conteúdo e campos; parágrafos de apoio usam entrelinha ampliada conforme contexto.
+- **Label:** identificação persistente dos campos e ações.
+- **Metadata:** assinatura Dokimos e avisos curtos de disponibilidade.
+
+Os valores normativos estão no frontmatter. A escala também inclui marca em 24 px e subtítulos em 18 px. Caixa alta e espaçamento artificial não são usados como linguagem operacional. Números financeiros tabulares seguem como requisito para telas futuras.
 
 ## Layout
 
-Navegação lateral discreta no desktop, cabeçalho compacto e uma área principal ampla. Títulos apresentam o contexto e a ação da página. A separação acontece por espaço, alinhamento e mudança tonal; cartões são reservados a grupos que precisam de identidade própria.
+A estrutura privada usa navegação lateral de 224 px a partir de 768 px. O conteúdo tem largura mínima flexível, margens de 16 px no celular, 32 px a partir de 640 px e 48 px a partir de 1024 px. A base aceita largura mínima de 320 px. A navegação móvel expande no fluxo: não é drawer, não sobrepõe conteúdo e não exige contenção de foco. Ao seguir Pedidos, recolhe e leva o foco ao conteúdo principal.
 
-O formulário de compra pode usar duas colunas, com resumo lateral; listas e configurações precisam de largura para comparação. Essa composição pertence a cada tela, não é um molde obrigatório para todas as páginas.
+O login divide a área em duas colunas a partir de 1024 px, com identidade grafite à esquerda e formulário compacto à direita (largura máxima de 384 px). Abaixo disso, a mensagem ampla é ocultada e a identificação permanece acima do formulário. Não há imagens raster distribuídas; tipografia, cor e composição definem a identidade.
 
-Em telas pequenas, navegação recolhida, conteúdo em uma coluna e resumo reposicionado junto ao envio. Preservar itens, valores e cadeia; converter a apresentação antes de ocultar informação essencial. Rolagem horizontal deve ficar contida em regiões que realmente a exigem.
+Formulários usam espaçamento vertical de 24 px entre grupos e 8 px entre label e campo. Tela futura de pedidos, resumo financeiro e cadeia não determinam um molde obrigatório: suas composições permanecem em `docs/design-frontend.md` como requisitos futuros.
 
 ## Elevation & Depth
 
-Profundidade produzida principalmente pela diferença tonal entre Surface e Paper. Contornos discretos reforçam limites interativos quando o contraste tonal não basta. Evitar sombras repetidas em cada painel.
+A SPEC-005 é plana: diferenças tonais, contornos e espaço delimitam regiões, sem sombras de superfície. O anel de foco é sinal de interação. Diálogos e painéis sobrepostos ainda não existem; quando implementados devem gerenciar foco e contexto inerte conforme AGENTS.md.
 
-Diálogos e painéis sobrepostos podem ter sombra leve e fundo escurecido. Conteúdo do fundo fica inerte e o foco permanece na superfície ativa. Não usar efeitos de vidro, texturas ou gradientes como camada decorativa.
-
-Movimento serve à orientação: transições curtas de estado e abertura, sem deslocar informações financeiras durante leitura ou decisão. Respeitar a preferência por movimento reduzido; tempos finais dependem do protótipo.
+Botões usam transição curta de cor, desativada com movimento reduzido. Não há animação de entrada, skeleton pulsante ou deslocamento decorativo implementado.
 
 ## Shapes
 
-Painéis principais têm cantos suaves mais amplos; campos, tabelas e controles mantêm curvas menores. Botões principais e etiquetas podem ter formato de cápsula. Evitar repetir cápsulas em todas as regiões.
+Campos e navegação têm curvas suaves; botões usam cápsulas. A coluna clara do login tem canto amplo na composição desktop. O frontmatter registra os raios observados, sem transformar cada região em cartão. Ícones Lucide mantêm traço consistente; ícones decorativos são ocultados da árvore acessível. A marca permanece textual, sem copiar o símbolo Syntro.
 
-Ícones devem pertencer a uma única família de traço consistente. Ações somente com ícone exigem nome acessível e explicação visual quando necessário. Não reproduzir o símbolo Syntro: enquanto não houver marca própria aprovada, usar ObraFlow como identificação textual.
+## Components
+
+### Buttons
+
+Ações firmes e contidas. O primitivo `Button` oferece principal, contorno e ghost, com altura mínima de 44 px, espaçamento horizontal de 20 px, foco visível e opacidade reduzida quando desabilitado. O principal escurece no hover; contorno e ghost recebem Surface. O login ocupa a largura do formulário e anuncia “Entrando…” durante submissão. Não há variante destrutiva implementada.
+
+### Inputs / Fields
+
+Campos de 48 px, Paper, borda interativa e preenchimento horizontal de 12 px. Foco troca a borda e acrescenta anel azul; invalidade altera borda e acompanha mensagem associada ao campo. Labels permanecem visíveis. Login aceita gerenciador de senhas e colagem. Mostrar/ocultar senha tem nome acessível e estado pressionado; sua área atual de 44 × 44 px atende à meta de toque do projeto, sem substituir a inspeção real de acessibilidade.
+
+### Navigation
+
+Pedidos é o único link de negócio disponível, sobre Surface e com peso semibold. Admin recebe aviso textual de que Obras e alçadas virão depois; não recebe links fictícios. Nome e role vêm da sessão; Sair informa progresso e mantém erro contextual se a saída não for confirmada. Link de salto permite alcançar o conteúdo principal. Nenhum painel administrativo ou listagem está implementado.
+
+### Session and feedback
+
+Consulta da sessão tem progresso anunciado, falha recuperável e tentativa explícita. Login tem validação por campo, alerta focável para falha, mensagens gerais de credenciais e bloqueio de duplicação durante envio. Rotas futuras apresentam indisponibilidade ou acesso restrito sem conteúdo especulativo. Não há tabela, card, badge, diálogo ou cadeia implementados neste marco.
 
 ## Do's and Don'ts
 
 ### Do
 
-- Destacar valor total, situação e próxima etapa.
-- Usar a paleta e a Manrope confirmadas como base da identidade.
-- Organizar interiores de painéis com alinhamento e espaço.
-- Preservar dados essenciais e decisões acessíveis no celular.
-- Validar contraste, teclado e zoom na interface real.
-- Documentar valores derivados e tokens após sua implementação.
+- Do preservar Manrope local, grafite, vermelhão e superfícies quentes.
+- Do distinguir cores de marca, ação, foco e erro.
+- Do organizar interiores com alinhamento e espaço.
+- Do comunicar progresso, erro e indisponibilidade com texto acessível.
+- Do validar teclado, contraste, reflow e zoom na interface real antes de declarar conformidade.
 
 ### Don't
 
-- Não copiar a marca, textos ou métricas da referência.
-- Não usar vermelhão como único sinal de rejeição ou erro.
-- Não inserir gráficos ou indicadores sem dados e finalidade no escopo.
-- Não ocultar regras de permissão atrás de botões sem explicação.
-- Não introduzir rascunhos, anexos, notificações ou reenvio por conveniência visual.
-- Não apresentar este documento como prova de implementação ou conformidade.
+- Don't copiar marca, textos ou métricas da referência.
+- Don't usar vermelhão como único sinal de erro ou rejeição.
+- Don't anunciar telas futuras como recursos disponíveis.
+- Don't inserir gráficos, notificações, rascunhos ou anexos fora do escopo.
+- Don't apresentar tokens, testes de componentes ou cálculos de contraste como validação visual ou integração real.

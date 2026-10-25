@@ -1,7 +1,7 @@
 # ObraFlow / Dokimos — Visão geral da solução
 
 Data: 24/10/2026  
-Status: domínio planejado para as roles Admin e Operador; SPEC-001 a SPEC-004 verificadas localmente, encerrando M1. A SPEC-004 implementa os quatro endpoints de autenticação, sessão PostgreSQL, CSRF e proteção por role. Funcionalidades de compras, administração e interface de login continuam planejadas; evidências de validação ficam em cada spec. `/api/docs` mantém o contrato completo, com requisições desabilitadas.
+Status: domínio planejado para as roles Admin e Operador; SPEC-001 a SPEC-004 verificadas localmente, encerrando M1. A SPEC-004 implementa os quatro endpoints de autenticação, sessão PostgreSQL, CSRF e proteção por role. A SPEC-005 implementa login e estrutura frontend, com E2E/visual ainda pendentes. Funcionalidades de compras e administração continuam planejadas; evidências de validação ficam em cada spec. `/api/docs` mantém o contrato completo, com requisições desabilitadas.
 Referência: [enunciado do desafio](../README.md).  
 Entrega informada no enunciado: 01/11/2026 às 23h59; o texto não explicita o fuso horário.
 

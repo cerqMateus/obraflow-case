@@ -2,7 +2,7 @@
 
 <!-- impeccable:product-schema 1 -->
 
-Documento de contexto para o frontend. Data: 24/10/2026. O projeto está em planejamento; capacidades descritas são requisitos, não evidência de implementação.
+Documento de contexto para o frontend. Data: 24/10/2026. A SPEC-005 implementa login, consulta da sessão e estrutura privada do frontend. As capacidades de negócio descritas abaixo continuam sendo requisitos; suas telas ainda não foram implementadas.
 
 ## Platform
 
@@ -43,7 +43,7 @@ A avaliação deve ser possível localmente com dados fictícios e contas de dem
 
 O usuário confirmou uma identidade próxima das referências Syntro anexadas à conversa: mesma paleta e família Manrope. A referência orienta a linguagem visual; sua marca, logotipo, textos e métricas não são conteúdo do ObraFlow.
 
-Interface em português brasileiro, com contexto, valores e próxima ação fáceis de localizar. O sistema de design inicial está em [DESIGN.md](DESIGN.md).
+Interface em português brasileiro, com contexto, valores e próxima ação fáceis de localizar. O sistema de design extraído da SPEC-005 está em [DESIGN.md](DESIGN.md).
 
 ## Evidence on Hand
 
@@ -52,7 +52,7 @@ Interface em português brasileiro, com contexto, valores e próxima ação fác
 - [Contrato planejado](docs/contrato-api.md) e [OpenAPI](docs/openapi.json).
 - Quatro referências visuais fornecidas pelo usuário na conversa: interface, paleta, tipografia e diálogo. Os anexos estão em caminhos temporários; não são assets distribuídos pelo repositório.
 
-Há uma superfície técnica mínima renderizada na SPEC-001, sem telas ou componentes de produto e sem certificação visual do sistema de design.
+A SPEC-005 contém login com validação, estados de sessão e estrutura responsiva de navegação, usando a API de autenticação e sem seletor fictício de identidade. Rotas de negócio exibem indisponibilidade ou acesso restrito. A existência dessa implementação não comprova o fluxo integrado com banco e API reais. Manrope é distribuída localmente, com licença SIL OFL preservada. Nenhuma imagem de referência é asset do frontend.
 
 ## Product Principles
 
@@ -63,4 +63,4 @@ Há uma superfície técnica mínima renderizada na SPEC-001, sem telas ou compo
 
 ## Accessibility & Inclusion
 
-Navegação por teclado, labels persistentes, foco gerenciado em diálogos, informação além da cor e adaptação para telas pequenas são requisitos já previstos. A documentação visual detalha metas de contraste e critérios de verificação, ainda sem comprovação em interface executável.
+Navegação por teclado, labels persistentes, foco gerenciado em diálogos, informação além da cor e adaptação para telas pequenas são requisitos já previstos. A documentação visual detalha metas de contraste e critérios de verificação, com controles e estados iniciais implementados na SPEC-005. Inspeção visual desktop/móvel, zoom e validação integrada continuam pendentes; testes de componentes e cálculos de contraste não comprovam conformidade de ponta a ponta.

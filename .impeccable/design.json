@@ -1,0 +1,322 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-25T00:52:48.8974392Z",
+  "title": "Design System: ObraFlow / Dokimos",
+  "extensions": {
+    "colorMeta": {
+      "background": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "#F7F5F3",
+        "tonalRamp": [
+          "oklch(15% 0.005 65)",
+          "oklch(27% 0.005 65)",
+          "oklch(39% 0.005 65)",
+          "oklch(51% 0.005 65)",
+          "oklch(63% 0.005 65)",
+          "oklch(75% 0.005 65)",
+          "oklch(87% 0.005 65)",
+          "oklch(95% 0.005 65)"
+        ]
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "Graphite",
+        "canonical": "#16181D",
+        "tonalRamp": [
+          "oklch(15% 0.012 265)",
+          "oklch(27% 0.012 265)",
+          "oklch(39% 0.012 265)",
+          "oklch(51% 0.012 265)",
+          "oklch(63% 0.012 265)",
+          "oklch(75% 0.012 265)",
+          "oklch(87% 0.012 265)",
+          "oklch(95% 0.012 265)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "canonical": "#F1EFEC",
+        "tonalRamp": [
+          "oklch(15% 0.006 75)",
+          "oklch(27% 0.006 75)",
+          "oklch(39% 0.006 75)",
+          "oklch(51% 0.006 75)",
+          "oklch(63% 0.006 75)",
+          "oklch(75% 0.006 75)",
+          "oklch(87% 0.006 75)",
+          "oklch(95% 0.006 75)"
+        ]
+      },
+      "muted-foreground": {
+        "role": "neutral",
+        "displayName": "Slate",
+        "canonical": "#5B636D",
+        "tonalRamp": [
+          "oklch(15% 0.018 250)",
+          "oklch(27% 0.018 250)",
+          "oklch(39% 0.018 250)",
+          "oklch(51% 0.018 250)",
+          "oklch(63% 0.018 250)",
+          "oklch(75% 0.018 250)",
+          "oklch(87% 0.018 250)",
+          "oklch(95% 0.018 250)"
+        ]
+      },
+      "brand": {
+        "role": "primary",
+        "displayName": "Vermelhão de marca",
+        "canonical": "#EE4B34",
+        "tonalRamp": [
+          "oklch(15% 0.16 31)",
+          "oklch(27% 0.16 31)",
+          "oklch(39% 0.16 31)",
+          "oklch(51% 0.16 31)",
+          "oklch(63% 0.16 31)",
+          "oklch(75% 0.16 31)",
+          "oklch(87% 0.16 31)",
+          "oklch(95% 0.16 31)"
+        ]
+      },
+      "brand-deep": {
+        "role": "primary",
+        "displayName": "Vermelhão profundo",
+        "canonical": "#D8402A",
+        "tonalRamp": [
+          "oklch(15% 0.16 31)",
+          "oklch(27% 0.16 31)",
+          "oklch(39% 0.16 31)",
+          "oklch(51% 0.16 31)",
+          "oklch(63% 0.16 31)",
+          "oklch(75% 0.16 31)",
+          "oklch(87% 0.16 31)",
+          "oklch(95% 0.16 31)"
+        ]
+      },
+      "primary": {
+        "role": "primary",
+        "displayName": "Vermelhão operacional",
+        "canonical": "#B83120",
+        "tonalRamp": [
+          "oklch(15% 0.15 31)",
+          "oklch(27% 0.15 31)",
+          "oklch(39% 0.15 31)",
+          "oklch(51% 0.15 31)",
+          "oklch(63% 0.15 31)",
+          "oklch(75% 0.15 31)",
+          "oklch(87% 0.15 31)",
+          "oklch(95% 0.15 31)"
+        ]
+      },
+      "primary-hover": {
+        "role": "primary",
+        "displayName": "Vermelhão de interação",
+        "canonical": "#9F291B",
+        "tonalRamp": [
+          "oklch(15% 0.15 31)",
+          "oklch(27% 0.15 31)",
+          "oklch(39% 0.15 31)",
+          "oklch(51% 0.15 31)",
+          "oklch(63% 0.15 31)",
+          "oklch(75% 0.15 31)",
+          "oklch(87% 0.15 31)",
+          "oklch(95% 0.15 31)"
+        ]
+      },
+      "primary-foreground": {
+        "role": "neutral",
+        "displayName": "Branco de ação",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(27% 0 0)",
+          "oklch(39% 0 0)",
+          "oklch(51% 0 0)",
+          "oklch(63% 0 0)",
+          "oklch(75% 0 0)",
+          "oklch(87% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Contorno quente",
+        "canonical": "#D8D2CB",
+        "tonalRamp": [
+          "oklch(15% 0.013 70)",
+          "oklch(27% 0.013 70)",
+          "oklch(39% 0.013 70)",
+          "oklch(51% 0.013 70)",
+          "oklch(63% 0.013 70)",
+          "oklch(75% 0.013 70)",
+          "oklch(87% 0.013 70)",
+          "oklch(95% 0.013 70)"
+        ]
+      },
+      "input": {
+        "role": "neutral",
+        "displayName": "Limite de campo",
+        "canonical": "#827970",
+        "tonalRamp": [
+          "oklch(15% 0.019 65)",
+          "oklch(27% 0.019 65)",
+          "oklch(39% 0.019 65)",
+          "oklch(51% 0.019 65)",
+          "oklch(63% 0.019 65)",
+          "oklch(75% 0.019 65)",
+          "oklch(87% 0.019 65)",
+          "oklch(95% 0.019 65)"
+        ]
+      },
+      "ring": {
+        "role": "accent",
+        "displayName": "Azul de foco",
+        "canonical": "#245B86",
+        "tonalRamp": [
+          "oklch(15% 0.09 245)",
+          "oklch(27% 0.09 245)",
+          "oklch(39% 0.09 245)",
+          "oklch(51% 0.09 245)",
+          "oklch(63% 0.09 245)",
+          "oklch(75% 0.09 245)",
+          "oklch(87% 0.09 245)",
+          "oklch(95% 0.09 245)"
+        ]
+      },
+      "destructive": {
+        "role": "semantic",
+        "displayName": "Framboesa de erro",
+        "canonical": "#9C2452",
+        "tonalRamp": [
+          "oklch(15% 0.15 355)",
+          "oklch(27% 0.15 355)",
+          "oklch(39% 0.15 355)",
+          "oklch(51% 0.15 355)",
+          "oklch(63% 0.15 355)",
+          "oklch(75% 0.15 355)",
+          "oklch(87% 0.15 355)",
+          "oklch(95% 0.15 355)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "body": {
+        "displayName": "Body",
+        "purpose": "Texto e campos."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Título do login e área privada."
+      },
+      "metadata": {
+        "displayName": "Metadata",
+        "purpose": "Assinatura e suporte breve."
+      },
+      "display": {
+        "displayName": "Display",
+        "purpose": "Mensagem de identidade do login na composição ampla."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Labels e ações."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "value": "150ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "name": "transition-colors",
+        "purpose": "Transição de cor do Button; removida com movimento reduzido."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Button / primary",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primitivo Button existente; altura mínima de 44 px e foco visível.",
+      "html": "<button class=\"ds-button-primary\">Continuar</button>",
+      "css": ".ds-button-primary {display:inline-flex;min-height:44px;align-items:center;justify-content:center;gap:8px;border-radius:9999px;padding:0 20px;font-size:14px;line-height:20px;font-weight:600;cursor:pointer;transition:color 150ms,background-color 150ms,border-color 150ms;font-family:var(--font-sans,'Manrope Variable',system-ui,sans-serif);background:var(--color-primary,#b83120);color:var(--color-primary-foreground,#fff);border:0;} .ds-button-primary:hover {background:var(--color-primary-hover,#9f291b)} .ds-button-primary:focus-visible {outline:2px solid var(--color-ring,#245b86);outline-offset:2px} .ds-button-primary:disabled {pointer-events:none;opacity:.6} @media(prefers-reduced-motion:reduce){.ds-button-primary {transition:none}}"
+    },
+    {
+      "name": "Button / outline",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Primitivo Button existente; altura mínima de 44 px e foco visível.",
+      "html": "<button class=\"ds-button-outline\">Continuar</button>",
+      "css": ".ds-button-outline {display:inline-flex;min-height:44px;align-items:center;justify-content:center;gap:8px;border-radius:9999px;padding:0 20px;font-size:14px;line-height:20px;font-weight:600;cursor:pointer;transition:color 150ms,background-color 150ms,border-color 150ms;font-family:var(--font-sans,'Manrope Variable',system-ui,sans-serif);background:var(--color-background,#f7f5f3);color:var(--color-foreground,#16181d);border:1px solid var(--color-border,#d8d2cb);} .ds-button-outline:hover {background:var(--color-muted,#f1efec)} .ds-button-outline:focus-visible {outline:2px solid var(--color-ring,#245b86);outline-offset:2px} .ds-button-outline:disabled {pointer-events:none;opacity:.6} @media(prefers-reduced-motion:reduce){.ds-button-outline {transition:none}}"
+    },
+    {
+      "name": "Button / ghost",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Primitivo Button existente; altura mínima de 44 px e foco visível.",
+      "html": "<button class=\"ds-button-ghost\">Continuar</button>",
+      "css": ".ds-button-ghost {display:inline-flex;min-height:44px;align-items:center;justify-content:center;gap:8px;border-radius:9999px;padding:0 20px;font-size:14px;line-height:20px;font-weight:600;cursor:pointer;transition:color 150ms,background-color 150ms,border-color 150ms;font-family:var(--font-sans,'Manrope Variable',system-ui,sans-serif);background:transparent;color:var(--color-foreground,#16181d);border:0;} .ds-button-ghost:hover {background:var(--color-muted,#f1efec)} .ds-button-ghost:focus-visible {outline:2px solid var(--color-ring,#245b86);outline-offset:2px} .ds-button-ghost:disabled {pointer-events:none;opacity:.6} @media(prefers-reduced-motion:reduce){.ds-button-ghost {transition:none}}"
+    },
+    {
+      "name": "Campo de e-mail",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo do login com label persistente e borda interativa.",
+      "html": "<label class=\"ds-label\" for=\"ds-email\">E-mail</label><input class=\"ds-input\" id=\"ds-email\" type=\"email\" autocomplete=\"username\" />",
+      "css": ".ds-label {display:block;margin-bottom:8px;color:var(--color-foreground,#16181d);font-size:14px;line-height:20px;font-weight:600;font-family:var(--font-sans,'Manrope Variable',system-ui,sans-serif);} .ds-input {width:100%;min-width:0;height:48px;border:1px solid var(--color-input,#827970);border-radius:8px;background:var(--color-background,#f7f5f3);color:var(--color-foreground,#16181d);padding:0 12px;font-size:16px;font-family:var(--font-sans,'Manrope Variable',system-ui,sans-serif);} .ds-input:focus-visible {border-color:var(--color-ring,#245b86);outline:2px solid var(--color-ring,#245b86);outline-offset:2px} .ds-input[aria-invalid=true] {border-color:var(--color-destructive,#9c2452)} .ds-input:disabled {opacity:.6}"
+    },
+    {
+      "name": "Navegação Pedidos",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "Único link de negócio exposto pelo shell da SPEC-005.",
+      "html": "<nav aria-label=\"Principal\"><a class=\"ds-nav\" href=\"#pedidos\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><rect width=\"8\" height=\"4\" x=\"8\" y=\"2\" rx=\"1\"/><path d=\"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2M9 12h6M9 16h6\"/></svg>Pedidos</a></nav>",
+      "css": ".ds-nav {display:flex;min-height:44px;align-items:center;gap:12px;border-radius:8px;background:var(--color-muted,#f1efec);color:var(--color-foreground,#16181d);padding:0 12px;text-decoration:none;font-size:14px;line-height:20px;font-weight:600;font-family:var(--font-sans,'Manrope Variable',system-ui,sans-serif);} .ds-nav:focus-visible {outline:2px solid var(--color-ring,#245b86);outline-offset:4px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Clareza para decidir",
+    "overview": "O ObraFlow combina superfícies claras e quentes, texto grafite, curvas suaves e acentos vermelhão. Sua personalidade é sóbria, precisa e próxima. A identidade confirmada pelo usuário preserva a paleta e a Manrope das referências Syntro, sem reproduzir sua marca, textos ou métricas.\n\nO espaço organiza o trabalho; a informação operacional fornece a densidade. Valores, situação e responsável pela próxima etapa têm prioridade nas futuras telas de negócio. A SPEC-005 implementa login, sessão e estrutura de navegação; não implementa essas telas. Este registro foi extraído do código, sem inspeção visual no navegador.",
+    "keyCharacteristics": [
+      "Base neutra clara com contraste tipográfico firme.",
+      "Manrope local em títulos, textos e formulários.",
+      "Vermelhão de identidade e derivação escura para ações com texto branco.",
+      "Superfícies planas, limites discretos e espaço para organizar conteúdo.",
+      "Estados e indisponibilidade comunicados com texto explícito."
+    ],
+    "rules": [
+      {
+        "body": "Estado nunca depende apenas da cor; use texto e semântica acessível. Vermelhão de marca não representa rejeição.",
+        "section": "colors",
+        "name": "Cor com significado"
+      }
+    ],
+    "dos": [
+      "Do preservar Manrope local, grafite, vermelhão e superfícies quentes.",
+      "Do distinguir cores de marca, ação, foco e erro.",
+      "Do organizar interiores com alinhamento e espaço.",
+      "Do comunicar progresso, erro e indisponibilidade com texto acessível.",
+      "Do validar teclado, contraste, reflow e zoom na interface real antes de declarar conformidade."
+    ],
+    "donts": [
+      "Don't copiar marca, textos ou métricas da referência.",
+      "Don't usar vermelhão como único sinal de erro ou rejeição.",
+      "Don't anunciar telas futuras como recursos disponíveis.",
+      "Don't inserir gráficos, notificações, rascunhos ou anexos fora do escopo.",
+      "Don't apresentar tokens, testes de componentes ou cálculos de contraste como validação visual ou integração real."
+    ]
+  }
+}

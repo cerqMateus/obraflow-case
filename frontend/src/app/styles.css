@@ -1,0 +1,27 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/manrope';
+
+@theme {
+  --font-sans: 'Manrope Variable', system-ui, sans-serif;
+  --color-background: #f7f5f3;
+  --color-foreground: #16181d;
+  --color-muted: #f1efec;
+  --color-muted-foreground: #5b636d;
+  --color-brand: #ee4b34;
+  --color-brand-deep: #d8402a;
+  --color-primary: #b83120;
+  --color-primary-hover: #9f291b;
+  --color-primary-foreground: #ffffff;
+  --color-border: #d8d2cb;
+  --color-input: #827970;
+  --color-ring: #245b86;
+  --color-destructive: #9c2452;
+  --color-success: #246348;
+  --color-pending: #785517;
+}
+
+@layer base {
+  body { margin: 0; min-width: 320px; background: var(--color-muted); color: var(--color-foreground); font-family: var(--font-sans); }
+  ::selection { background: var(--color-foreground); color: var(--color-background); }
+  :focus-visible { outline: 2px solid var(--color-ring); outline-offset: 4px; }
+}
