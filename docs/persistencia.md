@@ -37,7 +37,7 @@ As variáveis `POSTGRES_*` formam a URL com credenciais codificadas. `DATABASE_U
 
 Senhas usam `node:crypto.scrypt` assíncrono: N=131072, r=8, p=1, salt aleatório de 16 bytes por conta, chave de 64 bytes e teto de memória de 256 MiB por derivação. O hash armazena algoritmo/parâmetros/salt; verificação usa comparação de tempo constante e recusa formatos/parâmetros inesperados. O seed nunca altera hashes existentes.
 
-Store escolhido: **connect-pg-simple**, compatível com express-session e `pg`. Sua tabela é criada exclusivamente pela migration. A biblioteca e o middleware serão instalados e integrados na SPEC-004, com `createTableIfMissing: false`, `disableTouch: true`, `rolling: false`, prazo absoluto e timestamp de autenticação mantido em `sess`. Desabilitar touch sozinho não basta: o código de sessão também deverá preservar e validar o prazo absoluto em saves, com 8 horas após login e 15 minutos no bootstrap anônimo. Cookie, CSRF, origem e logout ainda não estão implementados.
+Store integrado na SPEC-004: **connect-pg-simple 10.0.0**, express-session **1.18.2** e `pg`. Sua tabela é criada exclusivamente pela migration existente, com `createTableIfMissing: false`, `disableTouch: true`, `rolling: false`, `resave: false` e `saveUninitialized: false`. `sess.absoluteExpiresAt` guarda o prazo exato e `authenticatedAt` registra o início autenticado; o servidor valida o prazo em todas as operações. A coluna técnica `expire` é arredondada pelo store para o próximo segundo, sem ampliar a autorização. O touch do cookie também é fixado ao prazo absoluto, com 8 horas após login e 15 minutos no bootstrap anônimo. Cookie, CSRF, origem, guards e logout estão implementados; detalhes em [sessão](specs/SPEC-004-autenticacao-backend.md).
 
 ## Seed base
 

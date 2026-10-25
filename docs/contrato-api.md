@@ -1,7 +1,7 @@
 # ObraFlow / Dokimos — Contrato inicial da API
 
 Versão do contrato: **0.1.0**. Data: **24/10/2026**.  
-Status: **especificação planejada, ainda sem endpoints implementados**.
+Status: **quatro operações de autenticação implementadas na SPEC-004; demais operações planejadas**. Evidências locais no [registro da spec](specs/SPEC-004-autenticacao-backend.md#registro-de-execução).
 
 - Contexto, entidades, permissões e user stories: [visão geral](visao-geral.md).
 - Definição estruturada com schemas, segurança e exemplos de todas as operações: [OpenAPI 3.0.3](openapi.json).

@@ -1,4 +1,5 @@
 import { databaseUrl } from './database/database-url';
+import { isIP } from 'node:net';
 
 export interface Configuration {
   port: number;
@@ -17,6 +18,10 @@ export const configuration = (env: NodeJS.ProcessEnv = process.env): Configurati
   if (!['postgresql:', 'postgres:'].includes(db.protocol) || !db.hostname || !db.username ||
     !db.password || db.pathname.length < 2) throw new Error('Invalid database configuration.');
   const secret = env.SESSION_SECRET;
+  if (env.TRUST_PROXY_IPS !== undefined && env.TRUST_PROXY_IPS !== '' &&
+    !env.TRUST_PROXY_IPS.split(',').every((address) => isIP(address) !== 0)) {
+    throw new Error('Invalid TRUST_PROXY_IPS.');
+  }
   if (!secret || secret.length < 32 || /placeholder|change.?me|replace|example/i.test(secret)) {
     throw new Error('Invalid SESSION_SECRET.');
   }

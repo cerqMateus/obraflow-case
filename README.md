@@ -2,9 +2,9 @@
 
 # Desafio Full-stack — ObraFlow
 
-## Execução local — SPEC-001 a SPEC-003
+## Execução local — SPEC-001 a SPEC-004
 
-Este incremento implementa infraestrutura, schema do domínio, migrations, seed base, base HTTP estrita e testes isolados com PostgreSQL real. Login, endpoints de negócio e telas de produto ainda não estão implementados. O enunciado original permanece abaixo.
+Este incremento implementa infraestrutura, schema do domínio, migrations, seed base, base HTTP estrita, autenticação por sessão PostgreSQL e testes isolados com banco real. As quatro operações de autenticação estão disponíveis por HTTP; endpoints de compras/administração e telas de produto continuam planejados. O enunciado original permanece abaixo.
 
 Requisitos: Docker Engine/Desktop com containers Linux e Docker Compose **2.24.4 ou superior** (overlay usa `!override`). Não é necessário instalar Node, pnpm ou PostgreSQL no host. A primeira execução baixa imagens e pacotes pela internet.
 
@@ -16,11 +16,11 @@ docker compose config --quiet
 docker compose up --build -d
 ```
 
-Em Bash, a primeira linha usa `--mount "type=bind,source=$(pwd),target=/workspace"`; os demais argumentos e comandos são os mesmos. O script copia `.env.example` para `.env`, substitui os dois placeholders por valores criptograficamente aleatórios e recusa sobrescrever arquivo existente. Não publique `.env` nem o remova a cada reinício. `SESSION_SECRET` fica reservado para a sessão da SPEC-004; não há autenticação neste marco.
+Em Bash, a primeira linha usa `--mount "type=bind,source=$(pwd),target=/workspace"`; os demais argumentos e comandos são os mesmos. O script copia `.env.example` para `.env`, substitui os dois placeholders por valores criptograficamente aleatórios e recusa sobrescrever arquivo existente. Não publique `.env` nem o remova a cada reinício. `SESSION_SECRET` assina o cookie de sessão e precisa permanecer estável para preservar sessões entre reinícios.
 
 Abra [ObraFlow local](http://localhost:8080). O link técnico consulta [backend e banco](http://localhost:8080/api/technical-status), que retorna `{"status":"ok"}` somente após consultar o PostgreSQL e confirmar todas as migrations da imagem. Esta rota temporária não é operação de negócio. `/health/live` e `/health/ready` ficam internos. Caminhos `/api` desconhecidos chegam ao Nest e retornam erro JSON, sem receber o HTML da SPA. Rotas de negócio futuras usam `/api/v1`.
 
-O [Swagger local](http://localhost:8080/api/docs/) serve o contrato **planejado**, com aviso e envio de requisições desabilitado. O arquivo está em `/api/docs/openapi.json`. As 21 operações descritas ainda não existem; a documentação não implica acesso privado ou implementação. Saúde e documentação não consultam dados de negócio.
+O [Swagger local](http://localhost:8080/api/docs/) serve o contrato completo, com envio de requisições desabilitado. O arquivo está em `/api/docs/openapi.json`. Das 21 operações descritas, somente as quatro de autenticação estão implementadas. Saúde e documentação não consultam dados de negócio.
 
 Somente `127.0.0.1:8080` é publicado. Backend (3000) e PostgreSQL (5432) ficam na rede Compose. Altere `HTTP_PORT` e `APP_ORIGIN` juntos no `.env` para usar outra porta. O serviço `migrate` aplica migrations após o banco saudável; o backend aguarda seu sucesso e o frontend aguarda a prontidão real do backend. Nginx acompanha mudanças do endereço do backend pelo DNS interno do Docker, inclusive após recriação do container. Falha de migration impede a inicialização do backend. Não há reset nem seed automático.
 
@@ -44,7 +44,31 @@ docker compose --profile tools run --rm backend-tools pnpm run db:seed:base
 
 O build já gera o cliente Prisma e `up` já aplica migrations; os comandos explícitos acima também estão disponíveis. `db:migrate` usa somente migrations versionadas, sem reset. O seed base cria quatro contas e dois fornecedores fictícios; não cria obras, vínculos, regras nem pedidos. Repetição preserva hashes e dados; divergência de cadastro causa erro e rollback. Não é um comando para restaurar contas modificadas.
 
-Contas locais de demonstração: `admin@demo.obraflow.test`, `amanda@demo.obraflow.test`, `joao@demo.obraflow.test`, `beatriz@demo.obraflow.test`. Senha fictícia comum: `ObraFlow-Demo-2026!`. Essas contas ainda não têm endpoint/tela de login; a autenticação será implementada na SPEC-004. Nunca reutilize essa senha em um ambiente real.
+Contas locais de demonstração: `admin@demo.obraflow.test`, `amanda@demo.obraflow.test`, `joao@demo.obraflow.test`, `beatriz@demo.obraflow.test`. Senha fictícia comum: `ObraFlow-Demo-2026!`. Há login por HTTP; a tela pertence à SPEC-005. Nunca reutilize essa senha em um ambiente real.
+
+### Autenticação por HTTP
+
+| Operação | Comportamento |
+| --- | --- |
+| `GET /api/v1/auth/csrf` | Cria/reutiliza bootstrap anônimo de 15 minutos, ou recupera token da sessão autenticada |
+| `POST /api/v1/auth/login` | Recebe e-mail/senha; exige cookie e CSRF; regenera sessão/token e inicia 8 horas absolutas |
+| `GET /api/v1/auth/me` | Retorna identidade persistida, expiração e token atuais |
+| `POST /api/v1/auth/logout` | Exige sessão/CSRF; invalida no banco e limpa cookie; retorna 204 |
+
+Exemplo PowerShell com contas fictícias após o seed; cookies e tokens permanecem somente na memória do cliente:
+
+```powershell
+$api = 'http://localhost:8080/api/v1'
+$csrf = Invoke-RestMethod "$api/auth/csrf" -SessionVariable loginSession
+$headers = @{ 'X-CSRF-Token' = $csrf.csrfToken; Origin = 'http://localhost:8080' }
+$body = @{ email = 'amanda@demo.obraflow.test'; password = 'ObraFlow-Demo-2026!' } | ConvertTo-Json
+$identity = Invoke-RestMethod "$api/auth/login" -Method Post -WebSession $loginSession -Headers $headers -ContentType 'application/json' -Body $body
+Invoke-RestMethod "$api/auth/me" -WebSession $loginSession | Select-Object user, expiresAt
+$headers['X-CSRF-Token'] = $identity.csrfToken
+Invoke-RestMethod "$api/auth/logout" -Method Post -WebSession $loginSession -Headers $headers
+```
+
+O token muda no login: use sempre o retornado pela resposta atual. Atividade não prolonga a sessão. Sem bootstrap/token, login retorna 403; sessão privada ausente/expirada retorna 401. Consulte [sessão](docs/specs/SPEC-004-autenticacao-backend.md) e o [contrato](docs/contrato-api.md#2-sessão-cookie-e-csrf).
 
 ### Banco exclusivo de testes
 
@@ -57,7 +81,7 @@ docker compose -p obraflow-test --env-file .env.test -f compose.yaml -f compose.
 docker compose -p obraflow-test --env-file .env.test -f compose.yaml -f compose.test.yaml --profile tools run --rm backend-tools pnpm run test:integration
 ```
 
-O bootstrap recusa sobrescrever `.env.test`. O projeto usa banco `obraflow_test`, volume `obraflow-test_postgres-test-data`, rede própria, porta 18080 e origem interna `http://frontend`. Integração limpa fixtures **somente** depois de verificar configuração e destino SQL efetivo; uma URL de trabalho é recusada. Não execute integração/E2E simultaneamente no mesmo banco. Fixtures provam restrições, rollback e concorrência de persistência; não provam endpoints ou autorização ainda ausentes. Detalhes de modelo, transação, hash, store e guardas: [persistência](docs/persistencia.md).
+O bootstrap recusa sobrescrever `.env.test`. O projeto usa banco `obraflow_test`, volume `obraflow-test_postgres-test-data`, rede própria, porta 18080 e origem interna `http://frontend`. Integração limpa fixtures **somente** depois de verificar configuração e destino SQL efetivo; uma URL de trabalho é recusada. Não execute integração/E2E simultaneamente no mesmo banco. As suítes verificam persistência, autenticação HTTP e proteção reutilizável por role; não provam funcionalidades de compras/administração ainda ausentes. Detalhes de modelo, transação, hash, store e guardas: [persistência](docs/persistencia.md).
 
 ### Desenvolvimento
 
@@ -93,15 +117,15 @@ Desenvolvimento opcional no host: Node **24.18.1**, Corepack e pnpm **10.20.0** 
 - Workspace pnpm com um lockfile, versões exatas e TypeScript 5.9.3 estrito. Node 24.18.1 é a base comum do host opcional e das imagens; pnpm 10.20.0 é ativado pelo Corepack. React 19.2.0, Vite 8.0.10 e Nest 11.1.16 são versões fixadas compatíveis com esse runtime, sem depender da tag `latest`.
 - ESLint 10.13.0 e typescript-eslint 8.72.0 validam as duas aplicações. Nest é aplicação independente, sem modo especial de monorepo do CLI. O build do backend usa `tsc` com metadados de decorators.
 - PostgreSQL 17.6 em Debian, Nginx 1.28.0 Alpine e imagens multi-stage. O backend final executa como usuário `node`, com apenas dependências de produção e código compilado; o frontend final contém Nginx e assets públicos. `.env` fica fora do contexto de build; segredos entram apenas em runtime no backend/banco, nunca no frontend.
-- `decimal.js` 10.6.0 foi escolhida e fixada em ambas as aplicações para a futura política comum: strings decimais, `ROUND_HALF_UP` por item em duas casas, soma de itens arredondados e limites explícitos. Cálculos financeiros ainda não estão implementados. Prisma/client 6.19.3 implementam o modelo e migrations, incluindo SQL para checks, índice parcial e sequência. Essa versão mantém a integração CommonJS existente; o cliente é gerado explicitamente para o sistema da imagem. `pg` 8.16.3 é usado pelo harness de testes e está disponível para o futuro store.
-- Senhas usam scrypt nativo assíncrono (N=131072, r=8, p=1), salt aleatório de 16 bytes por conta e comparação em tempo constante. Store escolhido: connect-pg-simple; tabela técnica criada por migration. Middleware, cookie, expiração absoluta, CSRF e origem serão integrados na SPEC-004, sem criação automática de schema. [Decisões de persistência](docs/persistencia.md).
-- A SPEC-003 configura DTOs fechados com class-validator/class-transformer, sem conversão implícita, query simples sem duplicatas, parsing explícito de paginação/booleanos, UUIDs e projeções obrigatórias em listas. As futuras operações precisam declarar seus DTOs e usar esses helpers; nenhum controller de teste entra no runtime. Ainda não há autenticação da SPEC-004. A página técnica não é a identidade visual final; Tailwind, Manrope e componentes de produto pertencem à etapa de frontend.
-- Configuração de início valida banco, segredo de sessão com ao menos 32 caracteres e sem placeholders, origem canônica, ambiente e porta. `APP_ENV=local` no Compose permite HTTP somente em origem local; `APP_ENV=production` exige HTTPS. `PORT=3000` é interno, separado de `HTTP_PORT`. `COOKIE_SECURE`, se definido, deve coincidir com o protocolo da origem; o cookie será implementado na SPEC-004.
+- `decimal.js` 10.6.0 foi escolhida e fixada em ambas as aplicações para a futura política comum: strings decimais, `ROUND_HALF_UP` por item em duas casas, soma de itens arredondados e limites explícitos. Cálculos financeiros ainda não estão implementados. Prisma/client 6.19.3 implementam o modelo e migrations, incluindo SQL para checks, índice parcial e sequência. Essa versão mantém a integração CommonJS existente; o cliente é gerado explicitamente para o sistema da imagem. `pg` 8.16.3 é usado pelo harness de testes e pelo store de sessão.
+- Senhas usam scrypt nativo assíncrono (N=131072, r=8, p=1), salt aleatório de 16 bytes por conta e comparação em tempo constante. Express-session 1.18.2 e connect-pg-simple 10.0.0 usam a tabela técnica já criada pela migration, com renovação desativada e prazo absoluto validado no servidor. [Decisões de persistência](docs/persistencia.md).
+- A SPEC-003 configura DTOs fechados com class-validator/class-transformer, sem conversão implícita, query simples sem duplicatas, parsing explícito de paginação/booleanos, UUIDs e projeções obrigatórias em listas. As futuras operações precisam declarar seus DTOs e usar esses helpers; nenhum controller de teste entra no runtime. A SPEC-004 protege rotas por padrão, exige origem/CSRF nas mutações e resolve identidade/role no banco. A página técnica não é a identidade visual final; Tailwind, Manrope e componentes de produto pertencem à etapa de frontend.
+- Configuração de início valida banco, segredo de sessão com ao menos 32 caracteres e sem placeholders, origem canônica, ambiente e porta. `APP_ENV=local` no Compose permite HTTP somente em origem local; `APP_ENV=production` exige HTTPS. `PORT=3000` é interno, separado de `HTTP_PORT`. `COOKIE_SECURE`, se definido, deve coincidir com o protocolo da origem. `TRUST_PROXY_IPS` aceita somente IPs literais explícitos; vazio não confia em cabeçalhos encaminhados. O limite de login é local ao processo e reinicia com ele; atrás do Nginx sem proxy confiável, clientes compartilham o limite por IP do proxy. [detalhes](docs/specs/SPEC-004-autenticacao-backend.md).
 - Nginx preserva caminhos `/api`, Host e Origin e mantém fallback SPA separado. O backend aplica o limite de 1 MiB, exige JSON para corpos e padroniza inclusive erros de parser em `{ error: { code, message, fields, details, requestId } }`. Respostas levam `Cache-Control: no-store`, UUID de correlação gerado no servidor e cabeçalhos contra MIME sniffing/framing. Erros inesperados são seguros; logs usam uma lista permitida de evento, correlação, status e código, sem serializar entradas ou exceções.
 - `contract:check` usa Swagger Parser e Ajv com formatos para validar estrutura, referências locais, unicidade de operationIds e todos os exemplos inline (schemas, parâmetros, headers e corpos). Testes de regressão corrompem cópias em memória para comprovar rejeição. Isso valida especificação, não endpoints. O contrato versionado e os nomes das migrations são empacotados na imagem final; fontes, testes e ferramentas permanecem fora dela.
 - Para produção faltam HTTPS, gestão externa de segredos, atualização contínua das imagens/dependências, backups, observabilidade e endurecimento operacional. Este Compose é uma base local, sem promessa de disponibilidade de produção.
 
-Evidências e pendências: registros da [SPEC-001](docs/specs/SPEC-001-base-workspace-docker.md#registro-de-execução), [SPEC-002](docs/specs/SPEC-002-schema-migrations-testes.md#registro-de-execução) e [SPEC-003](docs/specs/SPEC-003-base-http-contrato.md#registro-de-execução). SPEC-004 e posteriores continuam planejadas.
+Evidências e pendências: registros da [SPEC-001](docs/specs/SPEC-001-base-workspace-docker.md#registro-de-execução), [SPEC-002](docs/specs/SPEC-002-schema-migrations-testes.md#registro-de-execução), [SPEC-003](docs/specs/SPEC-003-base-http-contrato.md#registro-de-execução) e [SPEC-004](docs/specs/SPEC-004-autenticacao-backend.md#registro-de-execução). SPEC-005 e posteriores continuam planejadas.
 
 ---
 

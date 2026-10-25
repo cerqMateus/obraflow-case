@@ -5,11 +5,13 @@ import { AppModule } from './app.module';
 import { configuration } from './infrastructure/configuration';
 import { configureHttp } from './infrastructure/http/configure-http';
 import { configureDocumentation } from './infrastructure/http/documentation';
+import { configureSession } from './modules/auth/configure-session';
 
 const bootstrap = async (): Promise<void> => {
   const config = configuration();
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: false, logger: false });
   configureHttp(app);
+  configureSession(app);
   configureDocumentation(app);
   app.enableShutdownHooks();
   await app.listen(config.port, '0.0.0.0');
