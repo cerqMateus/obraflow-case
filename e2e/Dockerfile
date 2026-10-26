@@ -4,7 +4,8 @@ FROM mcr.microsoft.com/playwright:v1.56.1-noble AS tools
 COPY --from=node /usr/local/ /usr/local/
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
-RUN corepack enable && corepack prepare pnpm@10.20.0 --activate
+# Enable only the workspace manager: the browser image has a dangling Yarn link.
+RUN corepack enable pnpm && corepack prepare pnpm@10.20.0 --activate
 WORKDIR /workspace
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc ./
 COPY backend/package.json backend/package.json

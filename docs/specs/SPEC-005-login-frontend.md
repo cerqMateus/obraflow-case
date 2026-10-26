@@ -1,6 +1,6 @@
 ---
 id: SPEC-005
-status: in_progress
+status: verified
 depends_on: ["SPEC-004"]
 user_stories: ["US-01", "US-12"]
 operation_ids: []
@@ -100,3 +100,9 @@ A imagem inicial do Playwright usa Node 22, incompatível com o workspace. O Doc
 Pendente: instalação/build do runner corrigido e das imagens finais, seed base no banco isolado, execução Playwright real, inspeção login/shell em desktop e 320 px, teclado/foco/zoom/contraste renderizado e prints sanitizados. Não houve nova validação HTTP/PostgreSQL nesta spec, nem screenshots. Os critérios AC-005-01 a AC-005-05 não estão integralmente demonstrados por testes unitários ou análise estática.
 
 Comandos de retomada no README, seção Login e retomada da validação da SPEC-005. Commits, push e PR não foram criados.
+
+### Retomada durante a SPEC-006 — 25/10/2026
+
+As pendências E2E/visuais acima foram retomadas: build do runner Node 24/Playwright 1.56.1 e imagens finais concluído; `corepack enable pnpm` evita o link de Yarn quebrado na imagem do navegador. Lint/tipos do E2E passaram. Autenticação passou em desktop e 320 px com deep link privado, credencial inválida, Admin/Operador reais, reload, cookie/CSRF, storage vazio, logout, troca de conta e invalidação no servidor. O cenário de invalidação reutiliza a sessão do Operador no teste de troca de conta, preservando a cobertura e o limite real de login.
+
+Capturas de login e shell desktop/móvel foram produzidas e inspecionadas; não houve overflow ou perda de controles. Contraste dos tokens em uso foi confirmado no navegador durante a SPEC-006 (ação primária 6,00:1, secundário/página 5,30:1). A suíte completa contém agora 4 E2E de autenticação/obras e passou com API e PostgreSQL reais. Frontend: lint/tipos/build e 16 testes passaram. AC-005-01 a AC-005-05 possuem agora evidências locais; auditoria ampla de zoom e de todos os estados continua pertencendo à SPEC-013. A falha preexistente dos testes unitários de proxy do backend está registrada na SPEC-006 e não foi corrigida neste incremento.

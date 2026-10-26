@@ -159,7 +159,7 @@ Formulários usam espaçamento vertical de 24 px entre grupos e 8 px entre label
 
 ## Elevation & Depth
 
-A SPEC-005 é plana: diferenças tonais, contornos e espaço delimitam regiões, sem sombras de superfície. O anel de foco é sinal de interação. Diálogos e painéis sobrepostos ainda não existem; quando implementados devem gerenciar foco e contexto inerte conforme AGENTS.md.
+A SPEC-005 é plana: diferenças tonais, contornos e espaço delimitam regiões, sem sombras de superfície. O anel de foco é sinal de interação. A SPEC-006 acrescenta painel lateral modal para obras, com superfície Paper, divisor sutil e fundo grafite translúcido. O diálogo nativo torna o restante da página inerte e contém o foco.
 
 Botões usam transição curta de cor, desativada com movimento reduzido. Não há animação de entrada, skeleton pulsante ou deslocamento decorativo implementado.
 
@@ -179,11 +179,11 @@ Campos de 48 px, Paper, borda interativa e preenchimento horizontal de 12 px. Fo
 
 ### Navigation
 
-Pedidos é o único link de negócio disponível, sobre Surface e com peso semibold. Admin recebe aviso textual de que Obras e alçadas virão depois; não recebe links fictícios. Nome e role vêm da sessão; Sair informa progresso e mantém erro contextual se a saída não for confirmada. Link de salto permite alcançar o conteúdo principal. Nenhum painel administrativo ou listagem está implementado.
+A navegação oferece Pedidos e, para Admin, Obras. O link ativo usa Surface e peso semibold; alçadas continuam indisponíveis. Nome e role vêm da sessão; Sair informa progresso e mantém erro contextual se a saída não for confirmada. Link de salto permite alcançar o conteúdo principal. Obras usa lista com divisores, busca e paginação, sem cartões repetidos.
 
 ### Session and feedback
 
-Consulta da sessão tem progresso anunciado, falha recuperável e tentativa explícita. Login tem validação por campo, alerta focável para falha, mensagens gerais de credenciais e bloqueio de duplicação durante envio. Rotas futuras apresentam indisponibilidade ou acesso restrito sem conteúdo especulativo. Não há tabela, card, badge, diálogo ou cadeia implementados neste marco.
+Consulta da sessão tem progresso anunciado, falha recuperável e tentativa explícita. Login tem validação por campo, alerta focável para falha, mensagens gerais de credenciais e bloqueio de duplicação durante envio. Rotas futuras apresentam indisponibilidade ou acesso restrito sem conteúdo especulativo. A SPEC-006 acrescenta estados de lista de obras e painel de cadastro/edição. Não há tabela, badge ou cadeia de aprovação implementados.
 
 ## Do's and Don'ts
 

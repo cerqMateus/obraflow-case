@@ -2,9 +2,9 @@
 
 # Desafio Full-stack — ObraFlow
 
-## Execução local — SPEC-001 a SPEC-005
+## Execução local — SPEC-001 a SPEC-006
 
-Este incremento implementa infraestrutura, schema do domínio, migrations, seed base, base HTTP estrita, autenticação por sessão PostgreSQL e testes isolados com banco real. As quatro operações de autenticação estão disponíveis por HTTP. A SPEC-005 adiciona login, recuperação de sessão, logout e shell responsivo; compras/administração ainda não estão implementadas. A validação E2E e visual da SPEC-005 está pendente, com construção de imagens adiada a pedido do usuário. O enunciado original permanece abaixo.
+Este incremento implementa infraestrutura, schema do domínio, migrations, seed base, base HTTP estrita, autenticação por sessão PostgreSQL e testes isolados com banco real. A SPEC-005 adiciona login, recuperação de sessão, logout e shell responsivo. A SPEC-006 adiciona oito operações de cadastros por API e administração de obras em `/admin/obras`, com busca paginada, cadastro, detalhe e edição de nome. Compras, responsabilidades e alçadas continuam para os próximos marcos. Evidências e limitações estão nos registros das specs. O enunciado original permanece abaixo.
 
 Requisitos: Docker Engine/Desktop com containers Linux e Docker Compose **2.24.4 ou superior** (overlay usa `!override`). Não é necessário instalar Node, pnpm ou PostgreSQL no host. A primeira execução baixa imagens e pacotes pela internet.
 
@@ -20,7 +20,7 @@ Em Bash, a primeira linha usa `--mount "type=bind,source=$(pwd),target=/workspac
 
 Abra [ObraFlow local](http://localhost:8080). A rota técnica [backend e banco](http://localhost:8080/api/technical-status), que retorna `{"status":"ok"}` somente após consultar o PostgreSQL e confirmar todas as migrations da imagem. Esta rota temporária não é operação de negócio. `/health/live` e `/health/ready` ficam internos. Caminhos `/api` desconhecidos chegam ao Nest e retornam erro JSON, sem receber o HTML da SPA. Rotas de negócio futuras usam `/api/v1`.
 
-O [Swagger local](http://localhost:8080/api/docs/) serve o contrato completo, com envio de requisições desabilitado. O arquivo está em `/api/docs/openapi.json`. Das 21 operações descritas, somente as quatro de autenticação estão implementadas. Saúde e documentação não consultam dados de negócio.
+O [Swagger local](http://localhost:8080/api/docs/) serve o contrato completo, com envio de requisições desabilitado. O arquivo está em `/api/docs/openapi.json`. Das 21 operações descritas, 12 estão implementadas: quatro de autenticação e oito de usuários, obras e fornecedores. Saúde e documentação não consultam dados de negócio.
 
 Somente `127.0.0.1:8080` é publicado. Backend (3000) e PostgreSQL (5432) ficam na rede Compose. Altere `HTTP_PORT` e `APP_ORIGIN` juntos no `.env` para usar outra porta. O serviço `migrate` aplica migrations após o banco saudável; o backend aguarda seu sucesso e o frontend aguarda a prontidão real do backend. Nginx acompanha mudanças do endereço do backend pelo DNS interno do Docker, inclusive após recriação do container. Falha de migration impede a inicialização do backend. Não há reset nem seed automático.
 
@@ -81,7 +81,7 @@ docker compose -p obraflow-test --env-file .env.test -f compose.yaml -f compose.
 docker compose -p obraflow-test --env-file .env.test -f compose.yaml -f compose.test.yaml --profile tools run --rm backend-tools pnpm run test:integration
 ```
 
-O bootstrap recusa sobrescrever `.env.test`. O projeto usa banco `obraflow_test`, volume `obraflow-test_postgres-test-data`, rede própria, porta 18080 e origem interna `http://frontend`. Integração limpa fixtures **somente** depois de verificar configuração e destino SQL efetivo; uma URL de trabalho é recusada. Não execute integração/E2E simultaneamente no mesmo banco. As suítes verificam persistência, autenticação HTTP e proteção reutilizável por role; não provam funcionalidades de compras/administração ainda ausentes. Detalhes de modelo, transação, hash, store e guardas: [persistência](docs/persistencia.md).
+O bootstrap recusa sobrescrever `.env.test`. O projeto usa banco `obraflow_test`, volume `obraflow-test_postgres-test-data`, rede própria, porta 18080 e origem interna `http://frontend`. Integração limpa fixtures **somente** depois de verificar configuração e destino SQL efetivo; uma URL de trabalho é recusada. Não execute integração/E2E simultaneamente no mesmo banco. As suítes verificam persistência, autenticação HTTP, proteção por role e cadastros da SPEC-006; não provam os fluxos futuros de compras, responsabilidades ou alçadas. Detalhes de modelo, transação, hash, store e guardas: [persistência](docs/persistencia.md).
 
 ### Desenvolvimento
 
@@ -110,24 +110,43 @@ docker compose --profile tools run --rm frontend-tools pnpm run typecheck
 docker compose --profile tools run --rm frontend-tools pnpm run build
 ```
 
-Desenvolvimento opcional no host: Node **24.18.1**, Corepack e pnpm **10.20.0** (`corepack pnpm install --frozen-lockfile`, `corepack pnpm --filter @obraflow/backend db:generate`, depois `corepack pnpm lint`, `corepack pnpm typecheck`, `corepack pnpm build`). O backend precisa das variáveis do banco e de acesso à rede dele; o fluxo recomendado usa Docker. `test:unit` e `test:integration` existem no backend; a integração exige o ambiente isolado acima. `e2e/` contém o pacote `@obraflow/e2e` e os cenários de autenticação Playwright; execução integrada ainda pendente.
+Desenvolvimento opcional no host: Node **24.18.1**, Corepack e pnpm **10.20.0** (`corepack pnpm install --frozen-lockfile`, `corepack pnpm --filter @obraflow/backend db:generate`, depois `corepack pnpm lint`, `corepack pnpm typecheck`, `corepack pnpm build`). O backend precisa das variáveis do banco e de acesso à rede dele; o fluxo recomendado usa Docker. `test:unit` e `test:integration` existem no backend; a integração exige o ambiente isolado acima. `e2e/` contém o pacote `@obraflow/e2e` e os cenários de autenticação e obras Playwright; execução integrada validada em desktop e móvel na SPEC-006.
 
-### Login e retomada da validação da SPEC-005
+### Login e validação integrada
 
-Depois do seed base, acessar `/login`. O cliente chama `/api/v1/auth/me` ao iniciar, faz bootstrap CSRF antes de entrar e usa somente caminhos da mesma origem. Cookie é gerenciado pelo navegador; token CSRF fica apenas em memória. Logout/expiração cancelam consultas e limpam os dados privados; respostas de uma geração de sessão anterior são recusadas. Mutações não têm retry automático. Falha de comunicação mantém estado de erro, sem assumir sessão inexistente. Pedidos/obras/alçadas futuras exibem indisponibilidade explícita; não há listas fictícias.
+Depois do seed base, acessar `/login`. O cliente chama `/api/v1/auth/me` ao iniciar, faz bootstrap CSRF antes de entrar e usa somente caminhos da mesma origem. Cookie é gerenciado pelo navegador; token CSRF fica apenas em memória. Logout/expiração cancelam consultas e limpam os dados privados; respostas de uma geração de sessão anterior são recusadas. Mutações não têm retry automático. Falha de comunicação mantém estado de erro, sem assumir sessão inexistente. Pedidos e alçadas futuras exibem indisponibilidade explícita; não há listas fictícias.
 
 ```powershell
 docker compose --profile tools run --rm frontend-tools pnpm run test
-# Retomar quando houver espaço livre; estas etapas constroem imagens:
+# Estas etapas constroem imagens:
 docker compose -p obraflow-test --env-file .env.test -f compose.yaml -f compose.test.yaml --profile tools build backend-tools frontend-tools e2e
 docker compose -p obraflow-test --env-file .env.test -f compose.yaml -f compose.test.yaml up --build -d
 docker compose -p obraflow-test --env-file .env.test -f compose.yaml -f compose.test.yaml --profile tools run --rm backend-tools pnpm run db:seed:base
 docker compose -p obraflow-test --env-file .env.test -f compose.yaml -f compose.test.yaml --profile tools run --rm e2e pnpm run test
 ```
 
-E2E requer `COMPOSE_PROJECT_NAME=obraflow-test` e origem `http://frontend`; recusa outra configuração. Usa Chromium em desktop e 320 px, API e banco reais, sem interceptar login. Prints planejados são gravados em `e2e/evidence/` (ignorado pelo Git), sem traces de credenciais. Os screenshots ainda não foram produzidos nem inspecionados. O runner fixa Playwright 1.56.1 e copia Node 24.18.1 para a imagem dos navegadores. Esse ajuste do runner ainda requer build. Não executar integração do backend simultaneamente com E2E no mesmo banco. Após integração, executar seed base antes do navegador.
+E2E requer `COMPOSE_PROJECT_NAME=obraflow-test` e origem `http://frontend`; recusa outra configuração. Usa Chromium em desktop e 320 px, API e banco reais, sem interceptar login. Screenshots são gravados em `e2e/evidence/` (ignorado pelo Git), sem traces de credenciais. Login, shell, lista, painel e detalhe foram capturados e inspecionados na SPEC-006. O runner fixa Playwright 1.56.1 e copia Node 24.18.1 para a imagem dos navegadores. Build e quatro cenários Playwright passaram em desktop e móvel. Não executar integração do backend simultaneamente com E2E no mesmo banco. Após integração, executar seed base antes do navegador.
+
+### Obras e catálogos — SPEC-006
+
+Admin acessa `/admin/obras`: busca e paginação ficam na URL, “Nova obra” cadastra e “Editar” abre painel lateral. O nome só é confirmado após a resposta persistida. O detalhe `/admin/obras/:projectId` mostra nome e revisão de alçadas; responsabilidades e configuração serão acrescentadas nas próximas specs. Uma obra nova tem revisão 0, sem regras nem vínculos. Não há exclusão, endereço, orçamento ou situação de obra.
+
+| Operação HTTP em `/api/v1` | Acesso |
+| --- | --- |
+| `GET /users`, `POST /users` | Admin |
+| `GET /projects`, `GET /projects/{projectId}` | Admin e Operador, mesmo sem vínculo |
+| `POST /projects`, `PATCH /projects/{projectId}` | Admin |
+| `GET /suppliers` | Admin e Operador |
+| `POST /suppliers` | Admin |
+
+Todas as escritas exigem sessão e CSRF. Listas aceitam `page`, `pageSize` e `search`; usuários também aceitam `role`. Cadastros de usuário recebem `name`, `email`, `password` e `role` (`admin` ou `operator`); obras e fornecedores recebem somente `name`. Os exemplos e limites completos permanecem no [contrato](docs/contrato-api.md#5-usuários-obras-e-fornecedores) e no [OpenAPI](docs/openapi.json). Usuários e fornecedores não têm telas de cadastro.
+
+Para validar, execute os comandos de qualidade acima, `pnpm run test:integration` em `backend-tools` no Compose isolado e o seed base antes do E2E. O novo cenário Playwright usa API e PostgreSQL reais: Admin cadastra/edita e recarrega; Operador consulta a mesma obra por HTTP e recebe 403 nas mutações. Screenshots desktop/móvel ficam em `e2e/evidence/`. Não execute integração e E2E simultaneamente no mesmo banco.
 
 ## Decisões técnicas
+
+- SPEC-006: consultas paginadas fazem contagem e seleção na mesma transação `RepeatableRead`, com projeção explícita, ordenação por nome/ID e busca literal sem distinguir maiúsculas. Unicidade de e-mail é garantida pelo banco e traduzida em 409, inclusive concorrente. Nome da obra é atualizado sem tocar em revisão ou snapshots. Não houve alteração de schema/contrato nem dependências novas.
+- O lint do backend declara os mesmos metadados de decorators do TypeScript, preservando imports de DTOs necessários à validação HTTP em execução. O painel lateral usa o diálogo modal nativo, com foco inicial, contenção de foco e Escape; comportamento real é verificado no Playwright. Dados remotos ficam no TanStack Query, com chaves por identidade/filtros/página e cancelamento pelo cliente HTTP.
 
 - Workspace pnpm com um lockfile, versões exatas e TypeScript 5.9.3 estrito. Node 24.18.1 é a base comum do host opcional e das imagens; pnpm 10.20.0 é ativado pelo Corepack. React 19.2.0, Vite 8.0.10 e Nest 11.1.16 são versões fixadas compatíveis com esse runtime, sem depender da tag `latest`.
 - ESLint 10.13.0 e typescript-eslint 8.72.0 validam as duas aplicações. Nest é aplicação independente, sem modo especial de monorepo do CLI. O build do backend usa `tsc` com metadados de decorators.
@@ -140,7 +159,7 @@ E2E requer `COMPOSE_PROJECT_NAME=obraflow-test` e origem `http://frontend`; recu
 - `contract:check` usa Swagger Parser e Ajv com formatos para validar estrutura, referências locais, unicidade de operationIds e todos os exemplos inline (schemas, parâmetros, headers e corpos). Testes de regressão corrompem cópias em memória para comprovar rejeição. Isso valida especificação, não endpoints. O contrato versionado e os nomes das migrations são empacotados na imagem final; fontes, testes e ferramentas permanecem fora dela.
 - Para produção faltam HTTPS, gestão externa de segredos, atualização contínua das imagens/dependências, backups, observabilidade e endurecimento operacional. Este Compose é uma base local, sem promessa de disponibilidade de produção.
 
-Evidências e pendências: registros da [SPEC-001](docs/specs/SPEC-001-base-workspace-docker.md#registro-de-execução), [SPEC-002](docs/specs/SPEC-002-schema-migrations-testes.md#registro-de-execução), [SPEC-003](docs/specs/SPEC-003-base-http-contrato.md#registro-de-execução) e [SPEC-004](docs/specs/SPEC-004-autenticacao-backend.md#registro-de-execução). A SPEC-005 tem implementação e validação local do frontend; E2E e inspeção visual continuam pendentes. SPEC-006 e posteriores continuam planejadas.
+Evidências e pendências: registros da [SPEC-001](docs/specs/SPEC-001-base-workspace-docker.md#registro-de-execução), [SPEC-002](docs/specs/SPEC-002-schema-migrations-testes.md#registro-de-execução), [SPEC-003](docs/specs/SPEC-003-base-http-contrato.md#registro-de-execução) e [SPEC-004](docs/specs/SPEC-004-autenticacao-backend.md#registro-de-execução). A SPEC-005 teve sua validação E2E/visual retomada e concluída durante a SPEC-006. A SPEC-006 implementa e valida os cadastros e a administração de obras; cinco testes unitários preexistentes de configuração de proxy continuam falhando, conforme seu registro de execução. SPEC-007 e posteriores continuam planejadas.
 
 ---
 

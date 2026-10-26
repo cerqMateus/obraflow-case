@@ -46,7 +46,7 @@ test('deep link, invalid credentials, real login, reload, logout and account swi
   await openNavigation(page);
   await expect(page.getByText('Admin (demonstração)', { exact: true })).toBeVisible();
   await expect(page.getByText('Admin', { exact: true })).toBeVisible();
-  await expect(page.getByText('Obras e alçadas', { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Obras', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Novo pedido' })).toHaveCount(0);
   await noOverflow(page);
   await page.screenshot({ path: `evidence/shell-admin-${info.project.name}.png`, fullPage: true });
@@ -59,25 +59,19 @@ test('deep link, invalid credentials, real login, reload, logout and account swi
   await expect(page.getByText('Amanda', { exact: true })).toBeVisible();
   await expect(page.getByText('Operador', { exact: true })).toBeVisible();
   await expect(page.getByText('Admin (demonstração)', { exact: true })).toHaveCount(0);
-  await expect(page.getByText('Obras e alçadas', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Obras', exact: true })).toHaveCount(0);
   await page.goto('/admin/alcadas');
   await expect(page.getByRole('heading', { name: 'Acesso restrito' })).toBeVisible();
   await page.goto('/pedidos');
   await noOverflow(page);
   await page.screenshot({ path: `evidence/shell-operator-${info.project.name}.png`, fullPage: true });
-  await openNavigation(page);
-  await page.getByRole('button', { name: 'Sair', exact: true }).click();
-  await expect(page).toHaveURL('/login');
-});
-
-test('a server-side session invalidation removes private content', async ({ page }) => {
-  await page.goto('/login');
-  await login(page, 'joao@demo.obraflow.test');
+  // Reuse the operator login for server-side invalidation; the complete suite
+  // stays within the real ten-attempt rate window without weakening the server.
   const csrf = await page.request.get('/api/v1/auth/me');
   const body: unknown = await csrf.json();
   if (!body || typeof body !== 'object' || !('csrfToken' in body) || typeof body.csrfToken !== 'string') throw new Error('Invalid session response');
   expect((await page.request.post('/api/v1/auth/logout', { headers: { 'X-CSRF-Token': body.csrfToken, Origin: 'http://frontend' } })).status()).toBe(204);
   await page.reload();
   await expect(page).toHaveURL('/login');
-  await expect(page.getByText('João', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Amanda', { exact: true })).toHaveCount(0);
 });

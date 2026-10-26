@@ -154,7 +154,7 @@ Dentro da obra selecionada, mostrar operadores vinculados e estado do vínculo. 
 
 ## 5. Componentes implementados e previstos
 
-Implementados: Button (principal, contorno e ghost), Input, formulário de login, estrutura de navegação e estados de sessão/indisponibilidade. O catálogo `.impeccable/design.json` traduz os primitivos existentes para consulta isolada; não é código de produção nem prova visual. Não há variante destrutiva, tabela, badge, diálogo ou cadeia implementados. O inventário abaixo orienta os próximos marcos:
+Implementados: Button (principal, contorno e ghost), Input, formulário de login, estrutura de navegação e estados de sessão/indisponibilidade. O catálogo `.impeccable/design.json` traduz os primitivos existentes para consulta isolada; não é código de produção nem prova visual. A SPEC-006 acrescenta lista paginada de obras e painel lateral nativo de cadastro/edição, com os mesmos tokens. Não há variante destrutiva, tabela, badge ou cadeia implementados. O inventário abaixo orienta os próximos marcos:
 
 | Componente | Contrato visual e de interação |
 |---|---|
@@ -235,3 +235,5 @@ Antes de considerar a interface pronta:
 A documentação da SPEC-005 foi extraída do código. Na execução da SPEC-005 passaram lint, tipos, build de produção e 11 testes unitários/de componentes em 4 arquivos, incluindo regressão de foco na navegação móvel para a mesma rota. O código E2E passou por lint e tipos, sem execução de navegador. Essas evidências não substituem a inspeção visual nem o fluxo real integrado. A construção de novas imagens Docker e a rodada visual desktop/móvel foram adiadas pelo usuário devido à pressão de espaço em disco. Nenhuma captura de tela ou certificação visual é entregue por esta atualização.
 
 As rampas tonais do sidecar são sintetizadas apenas para prévia de paleta no catálogo; não constituem tokens implementados. Os exemplos HTML/CSS são isolados e não executam autenticação ou navegação da aplicação.
+
+Atualização da SPEC-006, 25/10/2026: a rodada anteriormente adiada foi executada. Login, shell, lista de obras, painel e detalhe foram capturados em desktop e 320 px e inspecionados; 4 cenários Playwright passaram contra API e PostgreSQL reais. O painel recebeu correção de ciclo Tab/Shift+Tab, com foco inicial, Escape e retorno ao acionador verificados. Contraste de pares computados no navegador: primário 6,00:1, secundário/página 5,30:1, campo 16,33:1 e secundário/painel 5,60:1. Revisão ampla de todos os estados, zoom e funcionalidades futuras permanece na SPEC-013; os registros anteriores descrevem a evidência disponível naquela etapa.

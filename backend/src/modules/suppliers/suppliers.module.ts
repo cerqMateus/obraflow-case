@@ -1,0 +1,7 @@
+import { Module } from '@nestjs/common';
+import { DatabaseModule } from '../../infrastructure/database/database.module';
+import { SuppliersController } from './suppliers.controller';
+import { SuppliersService } from './suppliers.service';
+
+@Module({ imports: [DatabaseModule], controllers: [SuppliersController], providers: [SuppliersService] })
+export class SuppliersModule {}

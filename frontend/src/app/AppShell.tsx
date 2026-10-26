@@ -21,10 +21,12 @@ export const AppShell = () => {
           <NavLink to="/pedidos" onClick={() => {
             setExpanded(false);
             document.getElementById('main-content')?.focus();
-          }} className="flex min-h-11 items-center gap-3 rounded-lg bg-muted px-3 text-sm font-semibold">
+          }} className={({ isActive }) => `flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-semibold ${isActive ? 'bg-muted' : 'hover:bg-muted'}`}>
             <ClipboardList size={18} aria-hidden="true" /> Pedidos
           </NavLink>
-          {session.user.role === 'admin' && <p className="px-3 text-sm leading-6 text-muted-foreground"><span>Obras e alçadas</span><br /><span className="text-xs">Disponíveis em uma próxima etapa</span></p>}
+          {session.user.role === 'admin' && <NavLink to="/admin/obras" onClick={() => {
+            setExpanded(false); document.getElementById('main-content')?.focus();
+          }} className={({ isActive }) => `flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold ${isActive ? 'bg-muted' : 'hover:bg-muted'}`}>Obras</NavLink>}
         </nav>
         <div className="mt-auto pt-10">
           <p className="break-words text-sm font-semibold">{session.user.name}</p>
