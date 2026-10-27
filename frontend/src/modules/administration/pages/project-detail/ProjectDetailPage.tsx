@@ -4,6 +4,7 @@ import { useProject } from '../../../catalogs';
 import { Button } from '../../../../shared/components/ui/button';
 import { ApiError } from '../../../../shared/api-client';
 import { ProjectPanel } from '../../components/ProjectPanel';
+import { ResponsibilitiesSection } from './ResponsibilitiesSection';
 
 export const ProjectDetailPage = () => {
   const { projectId = '' } = useParams();
@@ -21,8 +22,7 @@ export const ProjectDetailPage = () => {
           <Button variant="outline" onClick={() => { setConfirmation(''); setEditing(true); }}>Editar nome</Button>
         </header>
         <p role="status" className="mt-5 text-sm">{confirmation}</p>
-        <div className="mt-8 border-t border-border pt-6"><h2 className="text-lg font-semibold">Responsáveis e alçadas</h2>
-          <p className="mt-3 max-w-xl leading-7 text-muted-foreground">A gestão de responsabilidades e regras estará disponível em uma próxima etapa.</p></div>
+        <ResponsibilitiesSection key={projectId} projectId={projectId} projectName={query.data.name} />
         {editing && <ProjectPanel project={query.data} onClose={() => setEditing(false)} onSaved={() => { setEditing(false); setConfirmation('Nome da obra atualizado.'); }} />}
       </>}
   </section>;

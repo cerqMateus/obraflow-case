@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import { exerciseResponsibilities } from '../flows/responsibilities';
 
 const login = async (page: Page, email: string): Promise<void> => {
   await page.goto('/login');
@@ -14,7 +15,8 @@ const token = async (page: Page): Promise<string> => {
   return body.csrfToken;
 };
 
-test('Admin creates and edits a persisted project; operator reads without assignment and cannot manage', async ({ page }, info) => {
+test('Admin manages a project and responsibilities; operator reads without administrative access', async ({ page }, info) => {
+  test.setTimeout(60000);
   await login(page, 'admin@demo.obraflow.test');
   await page.goto('/admin/obras');
   const name = `Obra E2E ${info.project.name} ${Date.now()}`;
@@ -42,11 +44,16 @@ test('Admin creates and edits a persisted project; operator reads without assign
   await expect(page.getByText('Revisão de alçadas: 0')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.screenshot({ path: `evidence/project-detail-${info.project.name}.png`, fullPage: true });
+  await exerciseResponsibilities(page, { projectName: `${name} editada`, testName: info.project.name, csrfToken: await token(page) });
   await page.request.post('/api/v1/auth/logout', { headers: { 'X-CSRF-Token': await token(page), Origin: 'http://frontend' } });
   await login(page, 'amanda@demo.obraflow.test');
   const projectId = new URL(detailUrl).pathname.split('/').at(-1);
   const detail = await page.request.get(`/api/v1/projects/${projectId}`);
-  expect(detail.status()).toBe(200); expect(await detail.json()).toMatchObject({ name: `${name} editada`, rulesRevision: 0 });
+  expect(detail.status()).toBe(200); expect(await detail.json()).toMatchObject({ name: `${name} editada`, rulesRevision: 2 });
+  const responsibilities = `/api/v1/projects/${projectId}/responsibilities`;
+  expect((await page.request.get(responsibilities)).status()).toBe(403);
+  expect((await page.request.post(responsibilities, { headers: { 'X-CSRF-Token': await token(page) }, data: { operatorId: '00000000-0000-4000-8000-000000000002' } })).status()).toBe(403);
+  expect((await page.request.delete(`${responsibilities}/00000000-0000-4000-8000-000000000030`, { headers: { 'X-CSRF-Token': await token(page) } })).status()).toBe(403);
   expect((await page.request.get('/api/v1/users')).status()).toBe(403);
   for (const resource of ['projects', 'users', 'suppliers']) {
     expect((await page.request.post(`/api/v1/${resource}`, { headers: { 'X-CSRF-Token': await token(page) }, data: { name: 'Denied' } })).status()).toBe(403);

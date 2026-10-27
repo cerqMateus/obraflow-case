@@ -185,6 +185,10 @@ A navegação oferece Pedidos e, para Admin, Obras. O link ativo usa Surface e p
 
 Consulta da sessão tem progresso anunciado, falha recuperável e tentativa explícita. Login tem validação por campo, alerta focável para falha, mensagens gerais de credenciais e bloqueio de duplicação durante envio. Rotas futuras apresentam indisponibilidade ou acesso restrito sem conteúdo especulativo. A SPEC-006 acrescenta estados de lista de obras e painel de cadastro/edição. Não há tabela, badge ou cadeia de aprovação implementados.
 
+### Responsáveis por obra
+
+A SPEC-007 estende o detalhe da obra com lista dividida por linhas, filtro explícito de ativos/revogados e paginação na URL. Nome, situação e autoria/instante do vínculo formam a hierarquia, com fuso do navegador identificado. Adicionar abre diálogo nativo com busca paginada e radios de Operadores; revogar abre confirmação com pessoa e obra. Ambos preservam os tokens existentes, contêm foco e bloqueiam ações durante envio. Após revogar, o foco retorna a Adicionar responsável se o acionador deixou de existir. Conflitos exibem contagens, IDs fornecidos pela API e truncamento, sem nomes de pedidos inventados.
+
 ## Do's and Don'ts
 
 ### Do

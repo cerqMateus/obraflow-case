@@ -150,6 +150,8 @@ Exibir loading, vazio e erro; somente confirmar criação ou edição após resp
 
 Dentro da obra selecionada, mostrar operadores vinculados e estado do vínculo. Separar ativos de revogados por filtro explícito. “Adicionar responsável” abre seleção pesquisável e paginada de operadores elegíveis, sem incluir Admin.
 
+Implementado na SPEC-007: lista com histórico, filtros/paginação na URL e diálogos nativos de seleção e confirmação, mantendo os tokens existentes. A busca consulta usuários com role Operador; o backend revalida role e duplicidade. Horários usam o fuso do navegador explicitamente indicado.
+
 “Revogar responsabilidade” abre confirmação com pessoa e obra. Se houver impedimentos, manter vínculo e mostrar contagens e referências devolvidas pelo servidor. Quando a relação estiver truncada, comunicar que existem outros impedimentos. Não sugerir revogação parcial ou substituição em pedidos enviados.
 
 ## 5. Componentes implementados e previstos

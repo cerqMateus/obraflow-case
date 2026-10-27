@@ -2,7 +2,7 @@
 
 <!-- impeccable:product-schema 1 -->
 
-Documento de contexto para o frontend. Data: 24/10/2026. A SPEC-005 implementa login, consulta da sessão e estrutura privada do frontend. A SPEC-006 implementa administração de obras e catálogos reais por API. As capacidades de compras, responsabilidades e alçadas descritas abaixo continuam sendo requisitos futuros.
+Documento de contexto para o frontend. Atualizado em 26/10/2026. A SPEC-005 implementa login, consulta da sessão e estrutura privada do frontend. A SPEC-006 implementa administração de obras e catálogos reais por API. A SPEC-007 acrescenta gestão de responsáveis dentro da obra, com histórico e impedimentos por regras/pedidos. Compras e configuração de alçadas continuam sendo requisitos futuros.
 
 ## Platform
 
@@ -52,7 +52,7 @@ Interface em português brasileiro, com contexto, valores e próxima ação fác
 - [Contrato planejado](docs/contrato-api.md) e [OpenAPI](docs/openapi.json).
 - Quatro referências visuais fornecidas pelo usuário na conversa: interface, paleta, tipografia e diálogo. Os anexos estão em caminhos temporários; não são assets distribuídos pelo repositório.
 
-A SPEC-005 contém login com validação, estados de sessão e estrutura responsiva de navegação, usando a API de autenticação e sem seletor fictício de identidade. Admin pode listar, cadastrar e editar nomes de obras; usuários e fornecedores são cadastrados somente por API. Compras e alçadas exibem indisponibilidade ou acesso restrito. A existência dessa implementação não comprova o fluxo integrado com banco e API reais. Manrope é distribuída localmente, com licença SIL OFL preservada. Nenhuma imagem de referência é asset do frontend.
+A SPEC-005 contém login com validação, estados de sessão e estrutura responsiva de navegação, usando a API de autenticação e sem seletor fictício de identidade. Admin pode listar, cadastrar e editar nomes de obras e conceder/revogar responsabilidades. Usuários e fornecedores são cadastrados somente por API. Compras e alçadas exibem indisponibilidade ou acesso restrito. Evidências HTTP, PostgreSQL e navegador estão nos registros de execução das specs; as referências de regras/pedidos da SPEC-007 usam fixtures persistidas, pois suas rotas ainda não existem. Manrope é distribuída localmente, com licença SIL OFL preservada. Nenhuma imagem de referência é asset do frontend.
 
 ## Product Principles
 
@@ -63,4 +63,4 @@ A SPEC-005 contém login com validação, estados de sessão e estrutura respons
 
 ## Accessibility & Inclusion
 
-Navegação por teclado, labels persistentes, foco gerenciado em diálogos, informação além da cor e adaptação para telas pequenas são requisitos já previstos. A documentação visual detalha metas de contraste e critérios de verificação, com controles e estados iniciais implementados na SPEC-005. Inspeção visual desktop/móvel, zoom e validação integrada continuam pendentes; testes de componentes e cálculos de contraste não comprovam conformidade de ponta a ponta.
+Navegação por teclado, labels persistentes, foco gerenciado em diálogos, informação além da cor e adaptação para telas pequenas são requisitos já previstos. As SPEC-006/007 registram inspeção visual desktop/móvel, foco, pares de contraste e fluxos locais com API e banco reais. A revisão ampla de acessibilidade, zoom e todos os estados permanece na SPEC-013; as verificações realizadas não constituem certificação completa de conformidade.

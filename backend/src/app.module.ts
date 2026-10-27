@@ -5,6 +5,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { SuppliersModule } from './modules/suppliers/suppliers.module';
+import { ResponsibilitiesModule } from './modules/project-responsibilities/responsibilities.module';
 
-@Module({ imports: [DatabaseModule, AuthModule, UsersModule, ProjectsModule, SuppliersModule], controllers: [HealthController] })
+@Module({ imports: [DatabaseModule, AuthModule, UsersModule, ProjectsModule, SuppliersModule, ResponsibilitiesModule], controllers: [HealthController] })
 export class AppModule {}

@@ -8,7 +8,8 @@ const login = async (page: Page, email: string): Promise<void> => {
   await expect(page).toHaveURL('/pedidos');
 };
 const openNavigation = async (page: Page): Promise<void> => {
-  const toggle = page.getByRole('button', { name: 'Alternar navegação' });
+  const toggle = page.getByRole('button', { name: 'Alternar navegação', includeHidden: true });
+  await toggle.waitFor({ state: 'attached' });
   if (await toggle.isVisible() && await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
 };
 const noOverflow = async (page: Page): Promise<void> => {
